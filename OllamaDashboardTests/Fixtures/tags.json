@@ -1,0 +1,19 @@
+{
+  "models": [
+    {
+      "name": "llama3.2:latest",
+      "modified_at": "2026-06-01T12:13:14.123Z",
+      "size": 2019393189,
+      "digest": "sha256:abc",
+      "details": {
+        "format": "gguf",
+        "family": "llama",
+        "parameter_size": "3.2B",
+        "quantization_level": "Q4_K_M"
+      }
+    },
+    {
+      "name": "tinyllama:latest"
+    }
+  ]
+}

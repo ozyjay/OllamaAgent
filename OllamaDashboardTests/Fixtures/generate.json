@@ -1,0 +1,11 @@
+{
+  "model": "llama3.2",
+  "response": "Done.",
+  "done": true,
+  "total_duration": 2000000000,
+  "load_duration": 1000000,
+  "prompt_eval_count": 5,
+  "prompt_eval_duration": 100000000,
+  "eval_count": 50,
+  "eval_duration": 2000000000
+}
