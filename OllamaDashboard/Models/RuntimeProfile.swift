@@ -47,3 +47,16 @@ struct RuntimeProfile: Codable, Identifiable, Equatable {
         )
     ]
 }
+
+struct AppliedRuntimeProfile: Equatable {
+    let model: String
+    let numCtx: Int
+    let keepAlive: String
+
+    init(profile: RuntimeProfile, currentModel: String) {
+        let preferredModel = profile.preferredModel.trimmingCharacters(in: .whitespacesAndNewlines)
+        model = preferredModel.isEmpty ? currentModel : preferredModel
+        numCtx = profile.numCtx
+        keepAlive = profile.keepAlive
+    }
+}

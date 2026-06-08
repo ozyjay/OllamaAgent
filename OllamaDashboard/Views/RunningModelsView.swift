@@ -3,8 +3,11 @@ import SwiftUI
 struct RunningModelsView: View {
     @ObservedObject var monitor: OllamaServiceMonitor
     @EnvironmentObject private var settings: AppSettings
+    @EnvironmentObject private var profiles: ProfileManager
     @State private var selectedModelID: RunningModel.ID?
+    @State private var selectedProfileID: RuntimeProfile.ID?
     @State private var keepAlive = "30m"
+    @State private var numCtx: Int?
     @State private var status = ""
     @State private var pendingUnload = PendingUnloadConfirmation()
 
@@ -20,6 +23,13 @@ struct RunningModelsView: View {
             HStack {
                 Text("Running Models").font(.title3.bold())
                 Spacer()
+                Picker("Profile", selection: $selectedProfileID) {
+                    Text("None").tag(RuntimeProfile.ID?.none)
+                    ForEach(profiles.profiles) { Text($0.name).tag(Optional($0.id)) }
+                }
+                .frame(width: 190)
+                Button("Apply") { applyProfile() }
+                    .disabled(selectedProfileID == nil)
                 Picker("Keep alive", selection: $keepAlive) {
                     ForEach(keepAliveOptions, id: \.self) { Text($0).tag($0) }
                 }
@@ -83,7 +93,7 @@ struct RunningModelsView: View {
 
     private func warmSelected() async {
         guard let name = selectedModel?.name else { return }
-        status = await monitor.warm(model: name, keepAlive: keepAlive, numCtx: nil)
+        status = await monitor.warm(model: name, keepAlive: keepAlive, numCtx: numCtx)
     }
 
     private func unloadSelected() async {
@@ -93,6 +103,17 @@ struct RunningModelsView: View {
 
     private func unload(modelName: String) async {
         status = await monitor.unload(model: modelName)
+    }
+
+    private func applyProfile() {
+        guard let id = selectedProfileID, let profile = profiles.profiles.first(where: { $0.id == id }) else { return }
+        let applied = AppliedRuntimeProfile(profile: profile, currentModel: selectedModel?.name ?? "")
+        keepAlive = applied.keepAlive
+        numCtx = applied.numCtx
+        if let runningModel = monitor.runningModels.first(where: { $0.name == applied.model }) {
+            selectedModelID = runningModel.id
+        }
+        status = "Applied \(profile.name): keep_alive \(applied.keepAlive), num_ctx \(applied.numCtx)."
     }
 }
 

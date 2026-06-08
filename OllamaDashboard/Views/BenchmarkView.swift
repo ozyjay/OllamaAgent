@@ -71,11 +71,10 @@ struct BenchmarkView: View {
 
     private func applyProfile() {
         guard let id = selectedProfileID, let profile = profiles.profiles.first(where: { $0.id == id }) else { return }
-        if !profile.preferredModel.isEmpty {
-            selectedModel = profile.preferredModel
-        }
-        numCtx = profile.numCtx
-        keepAlive = profile.keepAlive
+        let applied = AppliedRuntimeProfile(profile: profile, currentModel: selectedModel)
+        selectedModel = applied.model
+        numCtx = applied.numCtx
+        keepAlive = applied.keepAlive
     }
 
     private func runBenchmark() async {

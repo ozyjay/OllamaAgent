@@ -3,7 +3,9 @@ import SwiftUI
 struct ContextView: View {
     @ObservedObject var monitor: OllamaServiceMonitor
     @EnvironmentObject private var settings: AppSettings
+    @EnvironmentObject private var profiles: ProfileManager
     @State private var selectedModel = ""
+    @State private var selectedProfileID: RuntimeProfile.ID?
     @State private var numCtx = 8192
     @State private var customCtx = "8192"
     @State private var prompt = "Reply with one sentence."
@@ -17,9 +19,16 @@ struct ContextView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Context Control").font(.title3.bold())
-            Picker("Model", selection: $selectedModel) {
-                Text("Select model").tag("")
-                ForEach(monitor.installedModels) { Text($0.name).tag($0.name) }
+            HStack {
+                Picker("Model", selection: $selectedModel) {
+                    Text("Select model").tag("")
+                    ForEach(monitor.installedModels) { Text($0.name).tag($0.name) }
+                }
+                Picker("Profile", selection: $selectedProfileID) {
+                    Text("None").tag(RuntimeProfile.ID?.none)
+                    ForEach(profiles.profiles) { Text($0.name).tag(Optional($0.id)) }
+                }
+                Button("Apply") { applyProfile() }
             }
             HStack {
                 Picker("Context", selection: $numCtx) {
@@ -57,6 +66,15 @@ struct ContextView: View {
                 selectedModel = monitor.installedModels.first?.name ?? ""
             }
         }
+    }
+
+    private func applyProfile() {
+        guard let id = selectedProfileID, let profile = profiles.profiles.first(where: { $0.id == id }) else { return }
+        let applied = AppliedRuntimeProfile(profile: profile, currentModel: selectedModel)
+        selectedModel = applied.model
+        numCtx = applied.numCtx
+        customCtx = "\(applied.numCtx)"
+        keepAlive = applied.keepAlive
     }
 
     private func runPrompt() async {
