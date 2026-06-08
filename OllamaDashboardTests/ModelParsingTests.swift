@@ -68,4 +68,20 @@ final class ModelParsingTests: XCTestCase {
         XCTAssertEqual(summary.fields.map(\.value), ["gguf", "llama", "3.2B", "Q4_K_M", "MIT"])
         XCTAssertEqual(summary.sections.map(\.title), ["Modelfile", "Parameters"])
     }
+
+    func testInstalledModelRowSummaryShowsDiskSizeWhenParameterSizeIsMissing() {
+        let model = InstalledModel(
+            name: "qwen3.6:27b-mlx",
+            modifiedAt: nil,
+            size: 19_760_000_000,
+            digest: "60b0437bbd02abcdef",
+            details: nil
+        )
+
+        let summary = InstalledModelRowSummary(model: model)
+
+        XCTAssertEqual(summary.trailingPrimary, "19.76 GB")
+        XCTAssertNil(summary.trailingSecondary)
+        XCTAssertEqual(summary.metadata, "60b0437bbd02")
+    }
 }

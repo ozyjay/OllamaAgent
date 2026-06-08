@@ -13,6 +13,7 @@ struct InstalledModelsView: View {
     @State private var searchText = ""
     @State private var sort: InstalledModelSort = .name
     @State private var selectedModelID: InstalledModel.ID?
+    @State private var detailModelID: InstalledModel.ID?
     @State private var detailSummary: ModelDetailSummary?
     @State private var detailError = ""
 
@@ -37,31 +38,31 @@ struct InstalledModelsView: View {
             HStack {
                 Text("Installed Models").font(.title3.bold())
                 Spacer()
-                TextField("Filter", text: $searchText)
+                Button("Refresh") { Task { await monitor.refreshAll() } }
+            }
+            HStack(spacing: 8) {
+                TextField("Filter models", text: $searchText)
                     .textFieldStyle(.roundedBorder)
-                    .frame(width: 160)
                 Picker("Sort", selection: $sort) {
                     ForEach(InstalledModelSort.allCases) { Text($0.rawValue).tag($0) }
                 }
-                .frame(width: 130)
-                Button("Refresh") { Task { await monitor.refreshAll() } }
+                .frame(width: 120)
+                Button(detailsButtonTitle) {
+                    Task { await toggleDetail() }
+                }
+                .disabled(selectedModel == nil)
             }
             if filteredModels.isEmpty {
                 EmptyStateView(title: "No installed models", detail: "Install models with Ollama, then refresh.")
             } else {
-                Table(filteredModels, selection: $selectedModelID) {
-                    TableColumn("Name") { Text($0.name).textSelection(.enabled) }
-                    TableColumn("Size") { Text(ByteFormatter.string(from: $0.size)) }
-                    TableColumn("Modified") { Text(DurationFormatter.date($0.modifiedAt)) }
-                    TableColumn("Digest") { Text($0.digest ?? "Unknown").lineLimit(1).textSelection(.enabled) }
-                }
-                HStack {
-                    Button("Show Details") {
-                        Task { await loadDetail() }
+                List(selection: $selectedModelID) {
+                    ForEach(filteredModels) { model in
+                        InstalledModelRow(model: model)
+                            .tag(model.id)
                     }
-                    .disabled(selectedModel == nil)
-                    Spacer()
                 }
+                .listStyle(.inset)
+                .frame(minHeight: 230)
                 if let detailSummary {
                     ModelDetailSummaryView(summary: detailSummary)
                 }
@@ -73,8 +74,27 @@ struct InstalledModelsView: View {
             }
         }
         .onChange(of: selectedModelID) { _ in
+            detailModelID = nil
             detailSummary = nil
             detailError = ""
+        }
+    }
+
+    private var isShowingDetailForSelection: Bool {
+        selectedModelID != nil && selectedModelID == detailModelID && detailSummary != nil
+    }
+
+    private var detailsButtonTitle: String {
+        isShowingDetailForSelection ? "Hide Details" : "Details"
+    }
+
+    private func toggleDetail() async {
+        if isShowingDetailForSelection {
+            detailModelID = nil
+            detailSummary = nil
+            detailError = ""
+        } else {
+            await loadDetail()
         }
     }
 
@@ -82,11 +102,73 @@ struct InstalledModelsView: View {
         guard let selectedModel else { return }
         do {
             let detail = try await OllamaAPIClient(baseURL: settings.baseURL).showModel(name: selectedModel.name)
+            detailModelID = selectedModel.id
             detailSummary = ModelDetailSummary(detail: detail)
             detailError = ""
         } catch {
+            detailModelID = nil
             detailSummary = nil
             detailError = error.localizedDescription
+        }
+    }
+}
+
+private struct InstalledModelRow: View {
+    let model: InstalledModel
+    private var summary: InstalledModelRowSummary {
+        InstalledModelRowSummary(model: model)
+    }
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 12) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(model.name)
+                    .font(.callout.weight(.medium))
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                    .textSelection(.enabled)
+                Text(summary.metadata)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+            Spacer(minLength: 8)
+            VStack(alignment: .trailing, spacing: 2) {
+                Text(summary.trailingPrimary)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.primary)
+                if let trailingSecondary = summary.trailingSecondary {
+                    Text(trailingSecondary)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .padding(.vertical, 3)
+    }
+}
+
+struct InstalledModelRowSummary: Equatable {
+    let metadata: String
+    let trailingPrimary: String
+    let trailingSecondary: String?
+
+    init(model: InstalledModel) {
+        let diskSize = ByteFormatter.string(from: model.size)
+        let shortDigest = model.digest?.trimmedNonEmpty.map { String($0.prefix(12)) }
+        metadata = [
+            DurationFormatter.date(model.modifiedAt),
+            shortDigest
+        ].compactMap { value in
+            value == "Unknown" ? nil : value
+        }.joined(separator: "  |  ")
+
+        if let parameterSize = model.details?.parameterSize.trimmedNonEmpty {
+            trailingPrimary = parameterSize
+            trailingSecondary = diskSize == "Unknown" ? nil : diskSize
+        } else {
+            trailingPrimary = diskSize
+            trailingSecondary = nil
         }
     }
 }
