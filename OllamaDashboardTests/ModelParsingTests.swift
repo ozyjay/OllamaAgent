@@ -69,7 +69,7 @@ final class ModelParsingTests: XCTestCase {
         XCTAssertEqual(summary.sections.map(\.title), ["Modelfile", "Parameters"])
     }
 
-    func testInstalledModelRowSummaryShowsDiskSizeWhenParameterSizeIsMissing() {
+    func testInstalledModelRowSummaryInfersParameterSizeFromModelNameWhenMetadataIsMissing() {
         let model = InstalledModel(
             name: "qwen3.6:27b-mlx",
             modifiedAt: nil,
@@ -80,8 +80,35 @@ final class ModelParsingTests: XCTestCase {
 
         let summary = InstalledModelRowSummary(model: model)
 
-        XCTAssertEqual(summary.trailingPrimary, "19.76 GB")
-        XCTAssertNil(summary.trailingSecondary)
+        XCTAssertEqual(summary.trailingPrimary, "27B")
+        XCTAssertEqual(summary.trailingSecondary, "19.76 GB")
         XCTAssertEqual(summary.metadata, "60b0437bbd02")
+    }
+
+    func testInstalledModelDetailToggleHidesOnlyVisibleSelectedDetails() {
+        XCTAssertTrue(
+            InstalledModelDetailToggle.shouldHideDetails(
+                selectedModelID: "gemma4:12b",
+                detailModelID: "gemma4:12b",
+                hasDetailSummary: true,
+                targetModelID: "gemma4:12b"
+            )
+        )
+        XCTAssertFalse(
+            InstalledModelDetailToggle.shouldHideDetails(
+                selectedModelID: "gemma4:12b",
+                detailModelID: "gemma4:12b",
+                hasDetailSummary: true,
+                targetModelID: "qwen3.6:27b-mlx"
+            )
+        )
+        XCTAssertFalse(
+            InstalledModelDetailToggle.shouldHideDetails(
+                selectedModelID: "gemma4:12b",
+                detailModelID: "gemma4:12b",
+                hasDetailSummary: false,
+                targetModelID: "gemma4:12b"
+            )
+        )
     }
 }

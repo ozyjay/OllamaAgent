@@ -11,13 +11,8 @@ struct MenuBarView: View {
         VStack(spacing: 0) {
             header
             Divider()
-            Picker("Section", selection: $selectedTab) {
-                ForEach(DashboardTab.allCases) { tab in
-                    Text(tab.rawValue).tag(tab)
-                }
-            }
-            .pickerStyle(.segmented)
-            .padding([.horizontal, .top], 12)
+            tabBar
+                .padding([.horizontal, .top], 12)
 
             Group {
                 switch selectedTab {
@@ -40,7 +35,9 @@ struct MenuBarView: View {
                 }
             }
             .padding(12)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
+        .frame(width: 720, height: 540, alignment: .topLeading)
         .onAppear {
             Task { await monitor.refreshAll() }
             configureAutoRefresh()
@@ -53,14 +50,45 @@ struct MenuBarView: View {
         }
     }
 
+    private var tabBar: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 4) {
+                ForEach(DashboardTab.allCases) { tab in
+                    Button {
+                        selectedTab = tab
+                    } label: {
+                        Text(tab.rawValue)
+                            .font(.headline)
+                            .lineLimit(1)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 6)
+                            .frame(minWidth: 92)
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(selectedTab == tab ? .white : .primary)
+                    .background(selectedTab == tab ? Color.accentColor : Color.clear)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                }
+            }
+            .padding(4)
+        }
+        .background(.quaternary, in: RoundedRectangle(cornerRadius: 8))
+    }
+
     private var header: some View {
         HStack {
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text("OllamaDashboard")
                     .font(.headline)
-                Text(settings.baseURLString)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                HStack(spacing: 8) {
+                    Text(settings.baseURLString)
+                    if let version = monitor.version?.version {
+                        Text("v\(version)")
+                    }
+                    Text(DurationFormatter.date(monitor.lastRefresh))
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
             }
             Spacer()
             Label(monitor.isReachable ? "Reachable" : "Offline", systemImage: monitor.isReachable ? "checkmark.circle.fill" : "xmark.circle.fill")

@@ -13,11 +13,15 @@ struct OllamaDashboardApp: App {
     }
 
     var body: some Scene {
-        MenuBarExtra("OllamaDashboard", systemImage: "helm") {
+        MenuBarExtra {
             MenuBarView(monitor: monitor)
                 .environmentObject(settings)
                 .environmentObject(profiles)
                 .frame(width: 720, height: 560)
+        } label: {
+            Image("MenuBarIcon")
+                .renderingMode(.template)
+                .accessibilityLabel("OllamaDashboard")
         }
         .menuBarExtraStyle(.window)
     }

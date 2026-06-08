@@ -96,4 +96,13 @@ final class OllamaAPIClientTests: XCTestCase {
         XCTAssertEqual(applied.numCtx, 32768)
         XCTAssertEqual(applied.keepAlive, "30m")
     }
+
+    func testProfileEditorValueRulesClampNumericRuntimeFields() {
+        XCTAssertEqual(ProfileEditorValueRules.clampedContextLength(-1), 1024)
+        XCTAssertEqual(ProfileEditorValueRules.clampedContextLength(200_000), 131_072)
+        XCTAssertEqual(ProfileEditorValueRules.clampedPredictionLimit(-1), 128)
+        XCTAssertEqual(ProfileEditorValueRules.clampedPredictionLimit(100_000), 16_384)
+        XCTAssertEqual(ProfileEditorValueRules.clampedTemperature(-0.5), 0, accuracy: 0.001)
+        XCTAssertEqual(ProfileEditorValueRules.clampedTemperature(3.5), 2, accuracy: 0.001)
+    }
 }

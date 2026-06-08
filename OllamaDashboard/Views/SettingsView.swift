@@ -5,19 +5,37 @@ struct SettingsView: View {
     @State private var detectionStatus = ""
 
     var body: some View {
-        Form {
+        VStack(alignment: .leading, spacing: 10) {
             Text("Settings").font(.title3.bold())
-            TextField("Ollama base URL", text: $settings.baseURLString)
-            Picker("Refresh interval", selection: $settings.refreshInterval) {
-                ForEach(RefreshInterval.allCases) { interval in
-                    Text(interval.label).tag(interval)
+            Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 10) {
+                GridRow {
+                    Text("Ollama base URL")
+                    TextField("Ollama base URL", text: $settings.baseURLString)
+                        .textFieldStyle(.roundedBorder)
                 }
-            }
-            Toggle("Enable CLI-backed controls", isOn: $settings.enableCLIControls)
-            HStack {
-                TextField("ollama CLI path", text: $settings.ollamaCLIPath)
-                Button("Auto-detect") {
-                    Task { await detectCLI() }
+                GridRow {
+                    Text("Refresh interval")
+                    Picker("Refresh interval", selection: $settings.refreshInterval) {
+                        ForEach(RefreshInterval.allCases) { interval in
+                            Text(interval.label).tag(interval)
+                        }
+                    }
+                    .labelsHidden()
+                    .frame(width: 150, alignment: .leading)
+                }
+                GridRow {
+                    Spacer()
+                    Toggle("Enable CLI-backed controls", isOn: $settings.enableCLIControls)
+                }
+                GridRow {
+                    Text("ollama CLI path")
+                    HStack(spacing: 8) {
+                        TextField("ollama CLI path", text: $settings.ollamaCLIPath)
+                            .textFieldStyle(.roundedBorder)
+                        Button("Auto-detect") {
+                            Task { await detectCLI() }
+                        }
+                    }
                 }
             }
             Toggle("Show advanced service configuration notes", isOn: $settings.showAdvancedServiceNotes)
@@ -26,7 +44,9 @@ struct SettingsView: View {
             if !detectionStatus.isEmpty {
                 Text(detectionStatus).foregroundStyle(.secondary)
             }
+            Spacer(minLength: 0)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
     private func detectCLI() async {

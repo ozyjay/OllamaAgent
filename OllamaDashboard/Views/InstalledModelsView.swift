@@ -58,6 +58,10 @@ struct InstalledModelsView: View {
                 List(selection: $selectedModelID) {
                     ForEach(filteredModels) { model in
                         InstalledModelRow(model: model)
+                            .contentShape(Rectangle())
+                            .onTapGesture(count: 2) {
+                                Task { await toggleDetail(for: model) }
+                            }
                             .tag(model.id)
                     }
                 }
@@ -89,20 +93,34 @@ struct InstalledModelsView: View {
     }
 
     private func toggleDetail() async {
-        if isShowingDetailForSelection {
-            detailModelID = nil
-            detailSummary = nil
-            detailError = ""
+        guard let selectedModel else { return }
+        await toggleDetail(for: selectedModel)
+    }
+
+    private func toggleDetail(for model: InstalledModel) async {
+        selectedModelID = model.id
+        if InstalledModelDetailToggle.shouldHideDetails(
+            selectedModelID: selectedModelID,
+            detailModelID: detailModelID,
+            hasDetailSummary: detailSummary != nil,
+            targetModelID: model.id
+        ) {
+            hideDetail()
         } else {
-            await loadDetail()
+            await loadDetail(for: model)
         }
     }
 
-    private func loadDetail() async {
-        guard let selectedModel else { return }
+    private func hideDetail() {
+        detailModelID = nil
+        detailSummary = nil
+        detailError = ""
+    }
+
+    private func loadDetail(for model: InstalledModel) async {
         do {
-            let detail = try await OllamaAPIClient(baseURL: settings.baseURL).showModel(name: selectedModel.name)
-            detailModelID = selectedModel.id
+            let detail = try await OllamaAPIClient(baseURL: settings.baseURL).showModel(name: model.name)
+            detailModelID = model.id
             detailSummary = ModelDetailSummary(detail: detail)
             detailError = ""
         } catch {
@@ -110,6 +128,17 @@ struct InstalledModelsView: View {
             detailSummary = nil
             detailError = error.localizedDescription
         }
+    }
+}
+
+struct InstalledModelDetailToggle {
+    static func shouldHideDetails(
+        selectedModelID: InstalledModel.ID?,
+        detailModelID: InstalledModel.ID?,
+        hasDetailSummary: Bool,
+        targetModelID: InstalledModel.ID
+    ) -> Bool {
+        selectedModelID == targetModelID && detailModelID == targetModelID && hasDetailSummary
     }
 }
 
@@ -163,13 +192,29 @@ struct InstalledModelRowSummary: Equatable {
             value == "Unknown" ? nil : value
         }.joined(separator: "  |  ")
 
-        if let parameterSize = model.details?.parameterSize.trimmedNonEmpty {
+        if let parameterSize = model.details?.parameterSize.trimmedNonEmpty
+            ?? ParameterSizeInference.value(from: model.name) {
             trailingPrimary = parameterSize
             trailingSecondary = diskSize == "Unknown" ? nil : diskSize
         } else {
             trailingPrimary = diskSize
             trailingSecondary = nil
         }
+    }
+}
+
+struct ParameterSizeInference {
+    static func value(from modelName: String) -> String? {
+        let pattern = #"(^|[:/_-])(\d+(?:\.\d+)?)([bBmM])(?=$|[:/_-])"#
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return nil }
+        let range = NSRange(modelName.startIndex..<modelName.endIndex, in: modelName)
+        guard let match = regex.firstMatch(in: modelName, range: range),
+              let numberRange = Range(match.range(at: 2), in: modelName),
+              let unitRange = Range(match.range(at: 3), in: modelName)
+        else {
+            return nil
+        }
+        return "\(modelName[numberRange])\(modelName[unitRange].uppercased())"
     }
 }
 

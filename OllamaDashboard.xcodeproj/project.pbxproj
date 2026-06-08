@@ -31,6 +31,7 @@
 		010000000000000000000016 /* ProfilesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000016 /* ProfilesView.swift */; };
 		010000000000000000000017 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000017 /* SettingsView.swift */; };
 		010000000000000000000018 /* AdvancedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000018 /* AdvancedView.swift */; };
+		010000000000000000000019 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000019 /* Assets.xcassets */; };
 		010000000000000000000101 /* ModelParsingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000101 /* ModelParsingTests.swift */; };
 		010000000000000000000102 /* OllamaAPIClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000102 /* OllamaAPIClientTests.swift */; };
 		010000000000000000000103 /* Fixtures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000103 /* Fixtures.swift */; };
@@ -74,6 +75,7 @@
 		020000000000000000000016 /* ProfilesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/ProfilesView.swift; sourceTree = "<group>"; };
 		020000000000000000000017 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/SettingsView.swift; sourceTree = "<group>"; };
 		020000000000000000000018 /* AdvancedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/AdvancedView.swift; sourceTree = "<group>"; };
+		020000000000000000000019 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		020000000000000000000101 /* ModelParsingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelParsingTests.swift; sourceTree = "<group>"; };
 		020000000000000000000102 /* OllamaAPIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OllamaAPIClientTests.swift; sourceTree = "<group>"; };
 		020000000000000000000103 /* Fixtures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Fixtures.swift; sourceTree = "<group>"; };
@@ -126,6 +128,7 @@
 				020000000000000000000016 /* ProfilesView.swift */,
 				020000000000000000000017 /* SettingsView.swift */,
 				020000000000000000000018 /* AdvancedView.swift */,
+				020000000000000000000019 /* Assets.xcassets */,
 			);
 			path = OllamaDashboard;
 			sourceTree = "<group>";
@@ -219,7 +222,14 @@
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		0B0000000000000000000001 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		0B0000000000000000000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				010000000000000000000019 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		0B0000000000000000000002 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
