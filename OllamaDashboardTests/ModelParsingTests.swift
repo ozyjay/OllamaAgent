@@ -44,4 +44,28 @@ final class ModelParsingTests: XCTestCase {
         XCTAssertEqual(result.outputTokensPerSecond ?? 0, 25, accuracy: 0.01)
         XCTAssertTrue(result.wasAlreadyWarm)
     }
+
+    func testModelDetailSummaryUsesHumanReadableFields() {
+        let detail = ModelDetail(
+            license: "MIT",
+            modelfile: "FROM llama3.2",
+            parameters: "num_ctx 4096",
+            template: nil,
+            details: ModelDetails(
+                parentModel: nil,
+                format: "gguf",
+                family: "llama",
+                families: ["llama"],
+                parameterSize: "3.2B",
+                quantizationLevel: "Q4_K_M"
+            ),
+            modelInfo: ["general.architecture": .string("llama")]
+        )
+
+        let summary = ModelDetailSummary(detail: detail)
+
+        XCTAssertEqual(summary.fields.map(\.label), ["Format", "Family", "Parameters", "Quantization", "License"])
+        XCTAssertEqual(summary.fields.map(\.value), ["gguf", "llama", "3.2B", "Q4_K_M", "MIT"])
+        XCTAssertEqual(summary.sections.map(\.title), ["Modelfile", "Parameters"])
+    }
 }

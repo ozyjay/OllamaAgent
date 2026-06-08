@@ -6,7 +6,7 @@ struct RunningModelsView: View {
     @State private var selectedModelID: RunningModel.ID?
     @State private var keepAlive = "30m"
     @State private var status = ""
-    @State private var showUnloadConfirmation = false
+    @State private var pendingUnload = PendingUnloadConfirmation()
 
     private let keepAliveOptions = ["0", "5m", "30m", "1h", "24h", "-1"]
 
@@ -43,7 +43,7 @@ struct RunningModelsView: View {
                     .disabled(selectedModel == nil)
                     Button("Unload Selected") {
                         if settings.confirmUnload {
-                            showUnloadConfirmation = true
+                            pendingUnload.begin(for: selectedModel)
                         } else {
                             Task { await unloadSelected() }
                         }
@@ -58,16 +58,26 @@ struct RunningModelsView: View {
                     .disabled(selectedModel == nil)
                     Spacer()
                 }
+                if pendingUnload.isPresented, let modelName = pendingUnload.modelName {
+                    HStack {
+                        Text("Unload \(modelName)?")
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                        Spacer()
+                        Button("Unload", role: .destructive) {
+                            if let name = pendingUnload.confirm() {
+                                Task { await unload(modelName: name) }
+                            }
+                        }
+                        Button("Cancel") {
+                            pendingUnload.cancel()
+                        }
+                    }
+                }
                 if !status.isEmpty {
                     Text(status).foregroundStyle(.secondary).textSelection(.enabled)
                 }
             }
-        }
-        .confirmationDialog("Unload selected model?", isPresented: $showUnloadConfirmation) {
-            Button("Unload", role: .destructive) {
-                Task { await unloadSelected() }
-            }
-            Button("Cancel", role: .cancel) {}
         }
     }
 
@@ -78,6 +88,32 @@ struct RunningModelsView: View {
 
     private func unloadSelected() async {
         guard let name = selectedModel?.name else { return }
-        status = await monitor.unload(model: name)
+        await unload(modelName: name)
+    }
+
+    private func unload(modelName: String) async {
+        status = await monitor.unload(model: modelName)
+    }
+}
+
+struct PendingUnloadConfirmation {
+    private(set) var modelName: String?
+
+    var isPresented: Bool {
+        modelName != nil
+    }
+
+    mutating func begin(for model: RunningModel?) {
+        modelName = model?.name
+    }
+
+    mutating func cancel() {
+        modelName = nil
+    }
+
+    mutating func confirm() -> String? {
+        let confirmedModelName = modelName
+        modelName = nil
+        return confirmedModelName
     }
 }

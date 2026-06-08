@@ -37,4 +37,23 @@ final class OllamaAPIClientTests: XCTestCase {
         XCTAssertFalse(settings.enableCLIControls)
         XCTAssertTrue(settings.confirmUnload)
     }
+
+    func testPendingUnloadConfirmationKeepsSelectedModelNameUntilConfirmed() {
+        let selected = RunningModel(
+            name: "qwen2.5-coder:7b",
+            model: nil,
+            size: nil,
+            digest: nil,
+            details: nil,
+            expiresAt: nil,
+            sizeVRAM: nil
+        )
+        var confirmation = PendingUnloadConfirmation()
+
+        confirmation.begin(for: selected)
+
+        XCTAssertTrue(confirmation.isPresented)
+        XCTAssertEqual(confirmation.confirm(), "qwen2.5-coder:7b")
+        XCTAssertFalse(confirmation.isPresented)
+    }
 }
