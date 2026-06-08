@@ -32,6 +32,24 @@ From PowerShell (`pwsh`):
 
 `run.ps1` builds first if the app is not already present in `.DerivedData`.
 
+To install the app into `~/Applications`:
+
+```powershell
+./scripts/install.ps1
+```
+
+To install and launch it:
+
+```powershell
+./scripts/install.ps1 -Launch
+```
+
+To install somewhere else, pass a destination folder:
+
+```powershell
+./scripts/install.ps1 -Destination /Applications
+```
+
 ## Features
 
 - Service status: reachable/offline state, version, base URL, last refresh, local URL/docs buttons.
