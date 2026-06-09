@@ -30,8 +30,15 @@ enum BenchmarkPrompt: String, CaseIterable, Identifiable {
 struct BenchmarkService {
     let client: OllamaAPIClient
 
-    func run(model: String, preset: BenchmarkPrompt, customPrompt: String, numCtx: Int, keepAlive: String) async throws -> BenchmarkResult {
+    func run(
+        model: String,
+        preset: BenchmarkPrompt,
+        customPrompt: String,
+        numCtx: Int?,
+        keepAlive: String,
+        options: [String: JSONValue] = [:]
+    ) async throws -> BenchmarkResult {
         let prompt = preset == .custom ? customPrompt : preset.prompt
-        return try await client.runBenchmark(model: model, prompt: prompt, numCtx: numCtx, keepAlive: keepAlive)
+        return try await client.runBenchmark(model: model, prompt: prompt, numCtx: numCtx, keepAlive: keepAlive, options: options)
     }
 }

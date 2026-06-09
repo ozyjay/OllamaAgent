@@ -10,6 +10,7 @@ struct AdvancedView: View {
             ServiceConfigurationView()
                 .tabItem { Text("Service Config") }
         }
+        .frame(minHeight: 420)
     }
 }
 
@@ -76,6 +77,7 @@ struct ServiceConfigurationView: View {
                     }
                 }
             }
+            .frame(minHeight: 260)
         }
     }
 }

@@ -14,27 +14,11 @@ struct MenuBarView: View {
             tabBar
                 .padding([.horizontal, .top], 12)
 
-            Group {
-                switch selectedTab {
-                case .service:
-                    ServiceStatusView(monitor: monitor)
-                case .installed:
-                    InstalledModelsView(monitor: monitor)
-                case .running:
-                    RunningModelsView(monitor: monitor)
-                case .context:
-                    ContextView(monitor: monitor)
-                case .benchmark:
-                    BenchmarkView(monitor: monitor)
-                case .profiles:
-                    ProfilesView()
-                case .settings:
-                    SettingsView()
-                case .advanced:
-                    AdvancedView()
-                }
+            ScrollView {
+                tabContent
+                    .padding(12)
+                    .frame(maxWidth: .infinity, alignment: .topLeading)
             }
-            .padding(12)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
         .frame(width: 720, height: 540, alignment: .topLeading)
@@ -47,6 +31,28 @@ struct MenuBarView: View {
         }
         .onChange(of: settings.refreshInterval) { _ in
             configureAutoRefresh()
+        }
+    }
+
+    @ViewBuilder
+    private var tabContent: some View {
+        switch selectedTab {
+        case .service:
+            ServiceStatusView(monitor: monitor)
+        case .installed:
+            InstalledModelsView(monitor: monitor)
+        case .running:
+            RunningModelsView(monitor: monitor)
+        case .context:
+            ContextView(monitor: monitor)
+        case .benchmark:
+            BenchmarkView(monitor: monitor)
+        case .profiles:
+            ProfilesView(monitor: monitor)
+        case .settings:
+            SettingsView()
+        case .advanced:
+            AdvancedView()
         }
     }
 

@@ -37,10 +37,10 @@ final class OllamaServiceMonitor: ObservableObject {
         }
     }
 
-    func warm(model: String, keepAlive: String, numCtx: Int?) async -> String {
+    func warm(model: String, keepAlive: String, numCtx: Int?, options: [String: JSONValue] = [:]) async -> String {
         do {
             let client = OllamaAPIClient(baseURL: settings.baseURL)
-            _ = try await client.warmModel(name: model, keepAlive: keepAlive, numCtx: numCtx)
+            _ = try await client.warmModel(name: model, keepAlive: keepAlive, numCtx: numCtx, options: options)
             await refreshAll()
             return "Warmed \(model) with keep_alive \(keepAlive)."
         } catch {

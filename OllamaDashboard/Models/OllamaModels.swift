@@ -1,14 +1,14 @@
 import Foundation
 
-struct OllamaVersion: Codable, Equatable {
+struct OllamaVersion: Codable, Equatable, Sendable {
     let version: String
 }
 
-struct InstalledModelsResponse: Codable {
+struct InstalledModelsResponse: Codable, Sendable {
     let models: [InstalledModel]
 }
 
-struct InstalledModel: Codable, Identifiable, Equatable {
+struct InstalledModel: Codable, Identifiable, Equatable, Sendable {
     var id: String { name }
     let name: String
     let modifiedAt: Date?
@@ -25,11 +25,11 @@ struct InstalledModel: Codable, Identifiable, Equatable {
     }
 }
 
-struct RunningModelsResponse: Codable {
+struct RunningModelsResponse: Codable, Sendable {
     let models: [RunningModel]
 }
 
-struct RunningModel: Codable, Identifiable, Equatable {
+struct RunningModel: Codable, Identifiable, Equatable, Sendable {
     var id: String { name }
     let name: String
     let model: String?
@@ -38,6 +38,7 @@ struct RunningModel: Codable, Identifiable, Equatable {
     let details: ModelDetails?
     let expiresAt: Date?
     let sizeVRAM: Int64?
+    let contextLength: Int?
 
     enum CodingKeys: String, CodingKey {
         case name
@@ -47,10 +48,11 @@ struct RunningModel: Codable, Identifiable, Equatable {
         case details
         case expiresAt = "expires_at"
         case sizeVRAM = "size_vram"
+        case contextLength = "context_length"
     }
 }
 
-struct ModelDetails: Codable, Equatable {
+struct ModelDetails: Codable, Equatable, Sendable {
     let parentModel: String?
     let format: String?
     let family: String?
@@ -68,7 +70,7 @@ struct ModelDetails: Codable, Equatable {
     }
 }
 
-struct ModelDetail: Codable, Equatable {
+struct ModelDetail: Codable, Equatable, Sendable {
     let license: String?
     let modelfile: String?
     let parameters: String?
@@ -86,7 +88,18 @@ struct ModelDetail: Codable, Equatable {
     }
 }
 
-enum JSONValue: Codable, Equatable {
+struct ModelContextMetadata: Equatable, Sendable {
+    let maxContextLength: Int?
+
+    init(detail: ModelDetail) {
+        maxContextLength = detail.modelInfo?
+            .filter { $0.key.hasSuffix(".context_length") }
+            .compactMap { _, value in value.integerValue }
+            .max()
+    }
+}
+
+enum JSONValue: Codable, Equatable, Sendable {
     case string(String)
     case number(Double)
     case bool(Bool)
@@ -122,21 +135,33 @@ enum JSONValue: Codable, Equatable {
         case .null: try container.encodeNil()
         }
     }
+
+    var integerValue: Int? {
+        switch self {
+        case .number(let value):
+            guard value.isFinite else { return nil }
+            return Int(value)
+        case .string(let value):
+            return Int(value.trimmingCharacters(in: .whitespacesAndNewlines))
+        default:
+            return nil
+        }
+    }
 }
 
-struct WarmModelResult: Equatable {
+struct WarmModelResult: Equatable, Sendable {
     let model: String
     let keepAlive: String
     let loaded: Bool
 }
 
-struct UnloadResult: Equatable {
+struct UnloadResult: Equatable, Sendable {
     let model: String
     let method: String
     let unloaded: Bool
 }
 
-struct BenchmarkResult: Codable, Equatable {
+struct BenchmarkResult: Codable, Equatable, Sendable {
     let model: String
     let prompt: String
     let response: String
@@ -158,7 +183,7 @@ struct BenchmarkResult: Codable, Equatable {
     }
 }
 
-struct GenerateResponseChunk: Codable, Equatable {
+struct GenerateResponseChunk: Codable, Equatable, Sendable {
     let model: String?
     let response: String?
     let done: Bool?

@@ -66,9 +66,20 @@ struct InstalledModelsView: View {
                     }
                 }
                 .listStyle(.inset)
-                .frame(minHeight: 230)
+                .frame(
+                    minHeight: detailSummary == nil ? 230 : 150,
+                    maxHeight: detailSummary == nil ? 340 : 190
+                )
                 if let detailSummary {
-                    ModelDetailSummaryView(summary: detailSummary)
+                    ScrollView {
+                        ModelDetailSummaryView(summary: detailSummary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .frame(height: 180)
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 6)
+                            .stroke(.separator, lineWidth: 1)
+                    }
                 }
                 if !detailError.isEmpty {
                     Text(detailError)
@@ -235,13 +246,16 @@ struct ModelDetailSummary: Equatable {
     let sections: [ModelDetailSection]
 
     init(detail: ModelDetail) {
+        let generationOptions = ProfileGenerationOptions(modelParameters: detail.parameters)
         fields = [
             Self.field("Format", detail.details?.format),
             Self.field("Family", detail.details?.family ?? detail.details?.families?.joined(separator: ", ")),
             Self.field("Parameters", detail.details?.parameterSize),
             Self.field("Quantization", detail.details?.quantizationLevel),
             Self.field("License", detail.license?.firstLine)
-        ].compactMap(\.self)
+        ].compactMap(\.self) + generationOptions.valueRows().map { row in
+            ModelDetailField(label: row.label, value: row.value)
+        }
 
         sections = [
             Self.section("Modelfile", detail.modelfile),
@@ -292,13 +306,16 @@ private struct ModelDetailSummaryView: View {
                         Text(section.value)
                             .font(.system(.caption, design: .monospaced))
                             .frame(maxWidth: .infinity, alignment: .leading)
+                            .fixedSize(horizontal: false, vertical: true)
                             .textSelection(.enabled)
+                            .padding(6)
                     }
-                    .frame(maxHeight: 72)
+                    .frame(height: 120)
+                    .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 4))
                 }
             }
         }
-        .padding(.top, 2)
+        .padding(8)
     }
 }
 

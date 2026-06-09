@@ -8,7 +8,7 @@ The app is designed as a lightweight local systems dashboard for:
 - installed models from `/api/tags`
 - loaded/running models from `/api/ps`
 - model warming and unloading
-- app-side runtime profiles
+- model-aware app-side runtime profiles
 - context test prompts
 - simple benchmark timing
 - optional read-only logs and service configuration notes
@@ -55,9 +55,9 @@ To install somewhere else, pass a destination folder:
 - Service status: reachable/offline state, version, base URL, last refresh, local URL/docs buttons.
 - Installed models: refresh, search, sort, digest/size/date display, and `/api/show` details.
 - Running models: refresh, copy model name, warm selected model, unload selected model with confirmation.
-- Context: run a test prompt with a selected `num_ctx` value.
+- Context: run a test prompt with an explicit or profile-resolved `num_ctx` value.
 - Benchmark: run prompt presets and show timing stats when Ollama returns them.
-- Profiles: editable built-in presets for Coding - Conservative, Long Context, and Low RAM.
+- Profiles: editable built-in presets with fallback context policies and exact per-model context overrides.
 - Settings: base URL, refresh interval, CLI enablement, CLI path, logs, and confirmations.
 - Advanced: read-only log viewer and copyable `launchctl setenv` examples.
 

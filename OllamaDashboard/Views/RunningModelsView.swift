@@ -8,6 +8,7 @@ struct RunningModelsView: View {
     @State private var selectedProfileID: RuntimeProfile.ID?
     @State private var keepAlive = "30m"
     @State private var numCtx: Int?
+    @State private var generationOptions: [String: JSONValue] = [:]
     @State private var status = ""
     @State private var pendingUnload = PendingUnloadConfirmation()
 
@@ -28,7 +29,7 @@ struct RunningModelsView: View {
                     ForEach(profiles.profiles) { Text($0.name).tag(Optional($0.id)) }
                 }
                 .frame(width: 190)
-                Button("Apply") { applyProfile() }
+                Button("Apply") { Task { await applyProfile() } }
                     .disabled(selectedProfileID == nil)
                 Picker("Keep alive", selection: $keepAlive) {
                     ForEach(keepAliveOptions, id: \.self) { Text($0).tag($0) }
@@ -46,6 +47,7 @@ struct RunningModelsView: View {
                     TableColumn("Expires") { Text(DurationFormatter.date($0.expiresAt)) }
                     TableColumn("Digest") { Text($0.digest ?? "Unknown").lineLimit(1) }
                 }
+                .frame(minHeight: 250)
                 HStack {
                     Button("Warm Selected") {
                         Task { await warmSelected() }
@@ -93,7 +95,7 @@ struct RunningModelsView: View {
 
     private func warmSelected() async {
         guard let name = selectedModel?.name else { return }
-        status = await monitor.warm(model: name, keepAlive: keepAlive, numCtx: numCtx)
+        status = await monitor.warm(model: name, keepAlive: keepAlive, numCtx: numCtx, options: generationOptions)
     }
 
     private func unloadSelected() async {
@@ -105,15 +107,30 @@ struct RunningModelsView: View {
         status = await monitor.unload(model: modelName)
     }
 
-    private func applyProfile() {
+    private func applyProfile() async {
         guard let id = selectedProfileID, let profile = profiles.profiles.first(where: { $0.id == id }) else { return }
-        let applied = AppliedRuntimeProfile(profile: profile, currentModel: selectedModel?.name ?? "")
+        let currentModel = selectedModel?.name ?? ""
+        let targetModel = profile.resolvedModel(currentModel: currentModel)
+        let modelMaxContext = await loadModelMaxContext(model: targetModel)
+        let applied = AppliedRuntimeProfile(profile: profile, currentModel: currentModel, modelMaxContext: modelMaxContext)
         keepAlive = applied.keepAlive
         numCtx = applied.numCtx
+        generationOptions = applied.options
         if let runningModel = monitor.runningModels.first(where: { $0.name == applied.model }) {
             selectedModelID = runningModel.id
         }
-        status = "Applied \(profile.name): keep_alive \(applied.keepAlive), num_ctx \(applied.numCtx)."
+        status = "Applied \(profile.name): keep_alive \(applied.keepAlive), \(applied.contextStatus)"
+    }
+
+    private func loadModelMaxContext(model: String) async -> Int? {
+        guard !model.isEmpty else { return nil }
+        do {
+            let detail = try await OllamaAPIClient(baseURL: settings.baseURL).showModel(name: model)
+            return ModelContextMetadata(detail: detail).maxContextLength
+        } catch {
+            status = "Could not load context metadata for \(model): \(error.localizedDescription)"
+            return nil
+        }
     }
 }
 

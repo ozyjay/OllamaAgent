@@ -47,7 +47,7 @@ final class OllamaAPIClient {
         return try await post("api/show", body: ["model": name])
     }
 
-    func warmModel(name: String, keepAlive: String, numCtx: Int?) async throws -> WarmModelResult {
+    func warmModel(name: String, keepAlive: String, numCtx: Int?, options: [String: JSONValue] = [:]) async throws -> WarmModelResult {
         guard ModelNameValidator.isValid(name) else { throw OllamaAPIError.invalidModelName }
         var body: [String: JSONValue] = [
             "model": .string(name),
@@ -55,8 +55,13 @@ final class OllamaAPIClient {
             "stream": .bool(false),
             "keep_alive": .string(keepAlive)
         ]
-        if let numCtx {
-            body["options"] = .object(["num_ctx": .number(Double(numCtx))])
+        var requestOptions = options
+        requestOptions.removeValue(forKey: "num_predict")
+        if let numCtx, requestOptions["num_ctx"] == nil {
+            requestOptions["num_ctx"] = .number(Double(numCtx))
+        }
+        if !requestOptions.isEmpty {
+            body["options"] = .object(requestOptions)
         }
         let _: GenerateResponseChunk = try await post("api/generate", body: body)
         return WarmModelResult(model: name, keepAlive: keepAlive, loaded: true)
@@ -74,15 +79,27 @@ final class OllamaAPIClient {
         return UnloadResult(model: name, method: "API keep_alive=0", unloaded: true)
     }
 
-    func runBenchmark(model: String, prompt: String, numCtx: Int, keepAlive: String) async throws -> BenchmarkResult {
+    func runBenchmark(
+        model: String,
+        prompt: String,
+        numCtx: Int?,
+        keepAlive: String,
+        options: [String: JSONValue] = [:]
+    ) async throws -> BenchmarkResult {
         guard ModelNameValidator.isValid(model) else { throw OllamaAPIError.invalidModelName }
-        let body: [String: JSONValue] = [
+        var body: [String: JSONValue] = [
             "model": .string(model),
             "prompt": .string(prompt),
             "stream": .bool(false),
-            "keep_alive": .string(keepAlive),
-            "options": .object(["num_ctx": .number(Double(numCtx))])
+            "keep_alive": .string(keepAlive)
         ]
+        var requestOptions = options
+        if let numCtx, requestOptions["num_ctx"] == nil {
+            requestOptions["num_ctx"] = .number(Double(numCtx))
+        }
+        if !requestOptions.isEmpty {
+            body["options"] = .object(requestOptions)
+        }
         let chunk: GenerateResponseChunk = try await post("api/generate", body: body)
         return BenchmarkResult(
             model: model,

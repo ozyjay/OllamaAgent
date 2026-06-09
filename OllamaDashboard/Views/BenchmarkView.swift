@@ -9,7 +9,9 @@ struct BenchmarkView: View {
     @State private var preset: BenchmarkPrompt = .tiny
     @State private var customPrompt = ""
     @State private var numCtx = 8192
+    @State private var useModelDefaultContext = false
     @State private var keepAlive = "5m"
+    @State private var generationOptions: [String: JSONValue] = [:]
     @State private var result: BenchmarkResult?
     @State private var status = ""
     @State private var isRunning = false
@@ -26,13 +28,13 @@ struct BenchmarkView: View {
                     Text("None").tag(RuntimeProfile.ID?.none)
                     ForEach(profiles.profiles) { Text($0.name).tag(Optional($0.id)) }
                 }
-                Button("Apply") { applyProfile() }
+                Button("Apply") { Task { await applyProfile() } }
             }
             HStack {
                 Picker("Prompt", selection: $preset) {
                     ForEach(BenchmarkPrompt.allCases) { Text($0.label).tag($0) }
                 }
-                TextField("num_ctx", value: $numCtx, formatter: NumberFormatter())
+                TextField("num_ctx", value: contextValue, formatter: NumberFormatter())
                     .textFieldStyle(.roundedBorder)
                     .frame(width: 90)
                 TextField("keep_alive", text: $keepAlive)
@@ -69,12 +71,43 @@ struct BenchmarkView: View {
         }
     }
 
-    private func applyProfile() {
+    private var contextValue: Binding<Int> {
+        Binding(
+            get: { numCtx },
+            set: {
+                numCtx = $0
+                useModelDefaultContext = false
+            }
+        )
+    }
+
+    private func applyProfile() async {
         guard let id = selectedProfileID, let profile = profiles.profiles.first(where: { $0.id == id }) else { return }
-        let applied = AppliedRuntimeProfile(profile: profile, currentModel: selectedModel)
+        let targetModel = profile.resolvedModel(currentModel: selectedModel)
+        let modelMaxContext = await loadModelMaxContext(model: targetModel)
+        let applied = AppliedRuntimeProfile(profile: profile, currentModel: selectedModel, modelMaxContext: modelMaxContext)
         selectedModel = applied.model
-        numCtx = applied.numCtx
+        if let resolvedNumCtx = applied.numCtx {
+            numCtx = resolvedNumCtx
+            useModelDefaultContext = false
+        } else {
+            useModelDefaultContext = true
+        }
         keepAlive = applied.keepAlive
+        generationOptions = applied.options
+        status = "Applied \(profile.name): \(applied.contextStatus)"
+        result = nil
+    }
+
+    private func loadModelMaxContext(model: String) async -> Int? {
+        guard !model.isEmpty else { return nil }
+        do {
+            let detail = try await OllamaAPIClient(baseURL: settings.baseURL).showModel(name: model)
+            return ModelContextMetadata(detail: detail).maxContextLength
+        } catch {
+            status = "Could not load context metadata for \(model): \(error.localizedDescription)"
+            return nil
+        }
     }
 
     private func runBenchmark() async {
@@ -83,7 +116,14 @@ struct BenchmarkView: View {
         defer { isRunning = false }
         do {
             result = try await BenchmarkService(client: OllamaAPIClient(baseURL: settings.baseURL))
-                .run(model: selectedModel, preset: preset, customPrompt: customPrompt, numCtx: numCtx, keepAlive: keepAlive)
+                .run(
+                    model: selectedModel,
+                    preset: preset,
+                    customPrompt: customPrompt,
+                    numCtx: useModelDefaultContext ? nil : numCtx,
+                    keepAlive: keepAlive,
+                    options: generationOptions
+                )
         } catch {
             result = nil
             status = error.localizedDescription

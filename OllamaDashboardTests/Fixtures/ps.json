@@ -6,6 +6,7 @@
       "size": 4683076000,
       "size_vram": 123456789,
       "digest": "sha256:def",
+      "context_length": 4096,
       "expires_at": "2026-06-08T08:00:00Z",
       "details": {
         "format": "gguf",

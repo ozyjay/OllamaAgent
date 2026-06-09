@@ -8,8 +8,10 @@ struct ContextView: View {
     @State private var selectedProfileID: RuntimeProfile.ID?
     @State private var numCtx = 8192
     @State private var customCtx = "8192"
+    @State private var useModelDefaultContext = false
     @State private var prompt = "Reply with one sentence."
     @State private var keepAlive = "5m"
+    @State private var generationOptions: [String: JSONValue] = [:]
     @State private var result = ""
     @State private var isRunning = false
 
@@ -28,10 +30,10 @@ struct ContextView: View {
                     Text("None").tag(RuntimeProfile.ID?.none)
                     ForEach(profiles.profiles) { Text($0.name).tag(Optional($0.id)) }
                 }
-                Button("Apply") { applyProfile() }
+                Button("Apply") { Task { await applyProfile() } }
             }
             HStack {
-                Picker("Context", selection: $numCtx) {
+                Picker("Context", selection: contextSelection) {
                     ForEach(presets, id: \.self) { Text("\($0)").tag($0) }
                 }
                 TextField("Custom", text: $customCtx)
@@ -40,6 +42,7 @@ struct ContextView: View {
                 Button("Use Custom") {
                     if let value = Int(customCtx), value > 0 {
                         numCtx = value
+                        useModelDefaultContext = false
                     }
                 }
                 Picker("Keep Alive", selection: $keepAlive) {
@@ -55,7 +58,7 @@ struct ContextView: View {
             }
             .disabled(selectedModel.isEmpty || isRunning)
             ScrollView {
-                Text(result.isEmpty ? "Profiles are app-side presets. Running a test prompt does not change the already-running Ollama service configuration." : result)
+                Text(result.isEmpty ? "Profiles are model-aware app-side presets. Running a test prompt does not change the already-running Ollama service configuration." : result)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .textSelection(.enabled)
                     .foregroundStyle(result.isEmpty ? .secondary : .primary)
@@ -68,13 +71,44 @@ struct ContextView: View {
         }
     }
 
-    private func applyProfile() {
+    private var contextSelection: Binding<Int> {
+        Binding(
+            get: { numCtx },
+            set: {
+                numCtx = $0
+                customCtx = "\($0)"
+                useModelDefaultContext = false
+            }
+        )
+    }
+
+    private func applyProfile() async {
         guard let id = selectedProfileID, let profile = profiles.profiles.first(where: { $0.id == id }) else { return }
-        let applied = AppliedRuntimeProfile(profile: profile, currentModel: selectedModel)
+        let targetModel = profile.resolvedModel(currentModel: selectedModel)
+        let modelMaxContext = await loadModelMaxContext(model: targetModel)
+        let applied = AppliedRuntimeProfile(profile: profile, currentModel: selectedModel, modelMaxContext: modelMaxContext)
         selectedModel = applied.model
-        numCtx = applied.numCtx
-        customCtx = "\(applied.numCtx)"
+        if let resolvedNumCtx = applied.numCtx {
+            numCtx = resolvedNumCtx
+            customCtx = "\(resolvedNumCtx)"
+            useModelDefaultContext = false
+        } else {
+            useModelDefaultContext = true
+        }
         keepAlive = applied.keepAlive
+        generationOptions = applied.options
+        result = "Applied \(profile.name): \(applied.contextStatus)"
+    }
+
+    private func loadModelMaxContext(model: String) async -> Int? {
+        guard !model.isEmpty else { return nil }
+        do {
+            let detail = try await OllamaAPIClient(baseURL: settings.baseURL).showModel(name: model)
+            return ModelContextMetadata(detail: detail).maxContextLength
+        } catch {
+            result = "Could not load context metadata for \(model): \(error.localizedDescription)"
+            return nil
+        }
     }
 
     private func runPrompt() async {
@@ -82,7 +116,13 @@ struct ContextView: View {
         defer { isRunning = false }
         do {
             let benchmark = try await OllamaAPIClient(baseURL: settings.baseURL)
-                .runBenchmark(model: selectedModel, prompt: prompt, numCtx: numCtx, keepAlive: keepAlive)
+                .runBenchmark(
+                    model: selectedModel,
+                    prompt: prompt,
+                    numCtx: useModelDefaultContext ? nil : numCtx,
+                    keepAlive: keepAlive,
+                    options: generationOptions
+                )
             result = benchmark.response
         } catch {
             result = error.localizedDescription
