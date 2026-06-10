@@ -40,6 +40,190 @@ enum OllamaLogTail {
         }
         return tail(text, maxLines: maxLines)
     }
+
+    static func newestFirst(_ text: String) -> String {
+        text.split(separator: "\n", omittingEmptySubsequences: false)
+            .reversed()
+            .joined(separator: "\n")
+    }
+}
+
+enum OllamaLogCategory: String, CaseIterable, Identifiable {
+    case errors = "Errors"
+    case warnings = "Warnings"
+    case requests = "Requests"
+    case modelLoad = "Model Load"
+    case lifecycle = "Lifecycle"
+
+    var id: String { rawValue }
+}
+
+enum OllamaLogSeverity: String, Equatable {
+    case error = "Error"
+    case warning = "Warning"
+    case request = "Request"
+    case model = "Model"
+    case lifecycle = "Service"
+    case info = "Info"
+}
+
+struct OllamaLogEntry: Identifiable, Equatable {
+    let id: Int
+    let rawLine: String
+    let summary: String
+    let detail: String
+    let categories: Set<OllamaLogCategory>
+    let severity: OllamaLogSeverity
+}
+
+enum OllamaLogClassifier {
+    static func categories(for line: String) -> Set<OllamaLogCategory> {
+        let lowercased = line.lowercased()
+        var categories: Set<OllamaLogCategory> = []
+
+        if containsAny(lowercased, [
+            " error", "error=", "level=error", "fatal", "panic", "exception",
+            "failed", "failure", "out of memory", "oom", "runner exited",
+            "segmentation", "signal: killed", "status=500", " 500 "
+        ]) {
+            categories.insert(.errors)
+        }
+        if containsAny(lowercased, [" warn", "warning", "level=warn", "status=4"]) {
+            categories.insert(.warnings)
+        }
+        if containsAny(lowercased, [
+            "/api/generate", "/api/chat", "/api/embed", "/v1/chat/completions",
+            "method=post", "generate request", "chat request"
+        ]) {
+            categories.insert(.requests)
+        }
+        if containsAny(lowercased, [
+            "loading model", "loaded model", "load model", "llm server",
+            "runner", "model_path", "expires_at"
+        ]) {
+            categories.insert(.modelLoad)
+        }
+        if containsAny(lowercased, [
+            "listening", "server started", "starting", "shutdown", "stopping",
+            "unload", "keep_alive", "server config"
+        ]) {
+            categories.insert(.lifecycle)
+        }
+
+        return categories
+    }
+
+    static func filteredLines(
+        in text: String,
+        selectedCategories: Set<OllamaLogCategory>,
+        searchText: String
+    ) -> String {
+        let trimmedSearch = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        return text.split(separator: "\n", omittingEmptySubsequences: false)
+            .map(String.init)
+            .filter { line in
+                let categoryMatches = selectedCategories.isEmpty
+                    || !categories(for: line).isDisjoint(with: selectedCategories)
+                let searchMatches = trimmedSearch.isEmpty
+                    || line.localizedCaseInsensitiveContains(trimmedSearch)
+                return categoryMatches && searchMatches
+            }
+            .joined(separator: "\n")
+    }
+
+    static func entries(
+        in text: String,
+        selectedCategories: Set<OllamaLogCategory>,
+        searchText: String
+    ) -> [OllamaLogEntry] {
+        let trimmedSearch = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        return text.split(separator: "\n", omittingEmptySubsequences: false)
+            .map(String.init)
+            .enumerated()
+            .compactMap { index, line in
+                guard !line.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
+                let categories = categories(for: line)
+                let categoryMatches = selectedCategories.isEmpty || !categories.isDisjoint(with: selectedCategories)
+                let searchMatches = trimmedSearch.isEmpty || line.localizedCaseInsensitiveContains(trimmedSearch)
+                guard categoryMatches && searchMatches else { return nil }
+
+                let severity = severity(for: categories)
+                return OllamaLogEntry(
+                    id: index,
+                    rawLine: line,
+                    summary: summary(for: line, severity: severity),
+                    detail: line,
+                    categories: categories,
+                    severity: severity
+                )
+            }
+    }
+
+    private static func containsAny(_ line: String, _ needles: [String]) -> Bool {
+        needles.contains { line.contains($0) }
+    }
+
+    private static func severity(for categories: Set<OllamaLogCategory>) -> OllamaLogSeverity {
+        if categories.contains(.errors) { return .error }
+        if categories.contains(.warnings) { return .warning }
+        if categories.contains(.requests) { return .request }
+        if categories.contains(.modelLoad) { return .model }
+        if categories.contains(.lifecycle) { return .lifecycle }
+        return .info
+    }
+
+    private static func summary(for line: String, severity: OllamaLogSeverity) -> String {
+        let message = keyValue("msg", in: line) ?? strippedMetadata(from: line)
+        switch severity {
+        case .request:
+            let path = keyValue("path", in: line)
+                ?? firstKnownPath(in: line)
+                ?? "request"
+            let model = keyValue("model", in: line).map { " for \($0)" } ?? ""
+            let status = keyValue("status", in: line).map { " returned \($0)" } ?? ""
+            return "Request \(path)\(model)\(status)"
+        case .model:
+            let model = keyValue("model", in: line).map { " \($0)" } ?? ""
+            return "Model\(model): \(message)"
+        case .lifecycle:
+            return "Service: \(message)"
+        case .error:
+            return "Error: \(message)"
+        case .warning:
+            return "Warning: \(message)"
+        case .info:
+            return message
+        }
+    }
+
+    private static func keyValue(_ key: String, in line: String) -> String? {
+        guard let keyRange = line.range(of: "\(key)=") else { return nil }
+        var start = keyRange.upperBound
+        if start < line.endIndex, line[start] == "\"" {
+            start = line.index(after: start)
+            guard let end = line[start...].firstIndex(of: "\"") else { return nil }
+            return String(line[start..<end])
+        }
+
+        let end = line[start...].firstIndex(where: { $0 == " " || $0 == "\t" }) ?? line.endIndex
+        let value = String(line[start..<end]).trimmingCharacters(in: .whitespacesAndNewlines)
+        return value.isEmpty ? nil : value
+    }
+
+    private static func firstKnownPath(in line: String) -> String? {
+        ["/api/generate", "/api/chat", "/api/embed", "/v1/chat/completions"].first { line.contains($0) }
+    }
+
+    private static func strippedMetadata(from line: String) -> String {
+        var result = line
+        for key in ["time", "level", "source"] {
+            if let value = keyValue(key, in: result) {
+                result = result.replacingOccurrences(of: "\(key)=\(value)", with: "")
+                result = result.replacingOccurrences(of: "\(key)=\"\(value)\"", with: "")
+            }
+        }
+        return result.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
 }
 
 final class OllamaCLIClient: OllamaCLIClientProviding {

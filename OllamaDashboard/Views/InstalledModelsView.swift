@@ -110,7 +110,16 @@ struct ModelStatusRow: Equatable {
 
 enum ModelStatusPolicy {
     static func runningModel(for model: InstalledModel, runningModels: [RunningModel]) -> RunningModel? {
-        runningModels.first { $0.name == model.name || $0.model == model.name }
+        runningModels.first { namesMatch($0.name, model.name) || namesMatch($0.model, model.name) }
+    }
+
+    static func isActive(model: InstalledModel, runningModels: [RunningModel], activeModelNames: Set<String>) -> Bool {
+        activeModelNames.contains { activeName in
+            namesMatch(activeName, model.name)
+                || runningModel(for: model, runningModels: runningModels).map {
+                    namesMatch(activeName, $0.name) || namesMatch(activeName, $0.model)
+                } == true
+        }
     }
 
     static func status(
@@ -118,7 +127,7 @@ enum ModelStatusPolicy {
         runningModels: [RunningModel],
         activeModelNames: Set<String> = []
     ) -> ModelLoadStatus {
-        if activeModelNames.contains(model.name) {
+        if isActive(model: model, runningModels: runningModels, activeModelNames: activeModelNames) {
             return .busy
         }
         return runningModel(for: model, runningModels: runningModels) == nil ? .idle : .warm
@@ -139,10 +148,22 @@ enum ModelStatusPolicy {
             let runningModel = runningModel(for: model, runningModels: runningModels)
             return ModelStatusRow(
                 modelName: model.name,
-                status: activeModelNames.contains(model.name) ? .busy : (runningModel == nil ? .idle : .warm),
+                status: isActive(model: model, runningModels: runningModels, activeModelNames: activeModelNames)
+                    ? .busy
+                    : (runningModel == nil ? .idle : .warm),
                 timeRemaining: timeRemaining(for: runningModel, now: now)
             )
         }
+    }
+
+    private static func namesMatch(_ lhs: String?, _ rhs: String?) -> Bool {
+        guard let lhs, let rhs else { return false }
+        return normalizedName(lhs) == normalizedName(rhs)
+    }
+
+    private static func normalizedName(_ name: String) -> String {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.hasSuffix(":latest") ? String(trimmed.dropLast(":latest".count)) : trimmed
     }
 }
 
@@ -496,16 +517,22 @@ private struct InstalledModelRow: View {
     private var summary: InstalledModelRowSummary {
         InstalledModelRowSummary(model: model)
     }
+    private var metadataText: String {
+        summary.metadata
+    }
+    private var profileText: String {
+        profileName.map { "Profile: \($0)" } ?? "Profile: Not warmed"
+    }
 
     var body: some View {
-        ModelRowAdaptiveLayout(spacing: 12, minimumFieldsWidth: 280, idealNameWidth: preferredNameWidth) {
+        ModelRowAdaptiveLayout(spacing: 12, minimumFieldsWidth: 360, idealNameWidth: preferredNameWidth) {
             VStack(alignment: .leading, spacing: 3) {
                 Text(model.name)
                     .font(.callout.weight(.medium))
                     .foregroundStyle(isSelected ? .white : .primary)
                     .lineLimit(1)
                     .truncationMode(.middle)
-                Text(summary.metadata)
+                Text(metadataText)
                     .font(.caption)
                     .foregroundStyle(isSelected ? .white.opacity(0.82) : .secondary)
                     .lineLimit(1)
@@ -525,12 +552,11 @@ private struct InstalledModelRow: View {
                         .opacity(timeRemaining == nil ? 0 : 1)
                 }
                 .frame(maxWidth: .infinity, alignment: .trailing)
-                Text(profileName ?? "")
-                    .font(.caption)
-                    .foregroundStyle(isSelected ? .white.opacity(0.9) : .secondary)
+                Text(profileText)
+                    .font(.caption.weight(profileName == nil ? .regular : .medium))
+                    .foregroundStyle(isSelected ? .white.opacity(0.9) : (profileName == nil ? .secondary : .primary))
                     .lineLimit(1)
                     .truncationMode(.middle)
-                    .opacity(profileName == nil ? 0 : 1)
                     .frame(maxWidth: .infinity, alignment: .trailing)
                 Text(summary.trailingPrimary)
                     .font(.caption)

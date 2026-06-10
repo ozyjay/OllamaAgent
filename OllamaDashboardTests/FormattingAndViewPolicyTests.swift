@@ -199,6 +199,8 @@ final class FormattingAndViewPolicyTests: XCTestCase {
         XCTAssertEqual(OllamaLogTail.tail("", maxLines: 200), "")
         XCTAssertEqual(OllamaLogTail.tail("one\ntwo\nthree", maxLines: 2), "two\nthree")
         XCTAssertEqual(OllamaLogTail.tail("one\ntwo", maxLines: 10), "one\ntwo")
+        XCTAssertEqual(OllamaLogTail.newestFirst("one\ntwo\nthree"), "three\ntwo\none")
+        XCTAssertEqual(OllamaLogTail.newestFirst(""), "")
     }
 
     func testLogTailHelperDropsPartialFirstLineWhenByteReadWasTruncated() {
@@ -216,6 +218,51 @@ final class FormattingAndViewPolicyTests: XCTestCase {
             OllamaLogTail.tail(Data("partial only".utf8), wasTruncated: true, maxLines: 2),
             ""
         )
+    }
+
+    func testLogClassifierCategoriesAndFiltering() {
+        XCTAssertTrue(
+            OllamaLogClassifier.categories(for: #"level=ERROR msg="runner exited: out of memory""#)
+                .contains(.errors)
+        )
+        XCTAssertTrue(
+            OllamaLogClassifier.categories(for: #"POST /api/generate model=qwen3:latest status=200"#)
+                .contains(.requests)
+        )
+        XCTAssertTrue(
+            OllamaLogClassifier.categories(for: #"msg="loading model" model_path=/models/gemma.gguf"#)
+                .contains(.modelLoad)
+        )
+
+        let text = """
+        level=ERROR msg="runner exited"
+        POST /api/generate model=qwen3
+        msg="loading model"
+        """
+
+        XCTAssertEqual(
+            OllamaLogClassifier.filteredLines(in: text, selectedCategories: [.errors], searchText: ""),
+            #"level=ERROR msg="runner exited""#
+        )
+        XCTAssertEqual(
+            OllamaLogClassifier.filteredLines(in: text, selectedCategories: [.requests], searchText: "qwen3"),
+            "POST /api/generate model=qwen3"
+        )
+    }
+
+    func testLogClassifierBuildsHumanReadableEntries() {
+        let text = """
+        time=2026-06-10T10:00:00 level=ERROR msg="runner exited: out of memory"
+        POST /api/generate model=qwen3:latest status=200
+        level=INFO msg="loading model" model=gemma4:12b
+        """
+
+        let entries = OllamaLogClassifier.entries(in: text, selectedCategories: [], searchText: "")
+
+        XCTAssertEqual(entries.map(\.severity), [.error, .request, .model])
+        XCTAssertEqual(entries[0].summary, "Error: runner exited: out of memory")
+        XCTAssertEqual(entries[1].summary, "Request /api/generate for qwen3:latest returned 200")
+        XCTAssertEqual(entries[2].summary, "Model gemma4:12b: loading model")
     }
 
     func testCLIRejectsInvalidModelNameBeforeExecutableLookup() async {

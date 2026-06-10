@@ -123,6 +123,22 @@ final class OllamaAPIClientTests: XCTestCase {
         )
     }
 
+    func testModelStatusPolicyMatchesLatestAliasesForProxyActivity() {
+        let installed = [makeInstalledModel(name: "qwen3:latest")]
+        let running = [makeRunningModel(name: "qwen3:latest")]
+
+        XCTAssertEqual(
+            ModelStatusPolicy.statusRows(
+                installedModels: installed,
+                runningModels: running,
+                activeModelNames: ["qwen3"]
+            ),
+            [
+                ModelStatusRow(modelName: "qwen3:latest", status: .busy, timeRemaining: nil)
+            ]
+        )
+    }
+
     func testProxyRequestParserExtractsModelFromJSONBodies() {
         XCTAssertEqual(
             OllamaProxyRequestParser.modelName(from: Data(#"{"model":"qwen3:latest","prompt":"hi"}"#.utf8)),
