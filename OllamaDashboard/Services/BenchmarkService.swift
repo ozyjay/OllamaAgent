@@ -28,7 +28,7 @@ enum BenchmarkPrompt: String, CaseIterable, Identifiable {
 }
 
 struct BenchmarkService {
-    let client: OllamaAPIClient
+    let client: any OllamaAPIClientProviding
 
     func run(
         model: String,

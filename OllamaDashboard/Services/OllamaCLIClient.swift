@@ -16,7 +16,33 @@ enum CLIError: LocalizedError, Equatable {
     }
 }
 
-final class OllamaCLIClient {
+protocol OllamaCLIClientProviding {
+    func findOllamaBinary() async -> String?
+    func stopModel(name: String) async throws
+    func psRaw() async throws -> String
+    func readLogs(maxLines: Int, maxBytes: UInt64) async throws -> String
+}
+
+enum OllamaLogTail {
+    static let defaultMaxLines = 200
+    static let defaultMaxBytes: UInt64 = 512 * 1_024
+
+    static func tail(_ text: String, maxLines: Int) -> String {
+        guard maxLines > 0 else { return "" }
+        return text.split(separator: "\n").suffix(maxLines).joined(separator: "\n")
+    }
+
+    static func tail(_ data: Data, wasTruncated: Bool, maxLines: Int) -> String {
+        var text = String(decoding: data, as: UTF8.self)
+        if wasTruncated {
+            guard let firstLineBreak = text.firstIndex(of: "\n") else { return "" }
+            text = String(text[text.index(after: firstLineBreak)...])
+        }
+        return tail(text, maxLines: maxLines)
+    }
+}
+
+final class OllamaCLIClient: OllamaCLIClientProviding {
     var executableURL: URL
 
     init(executablePath: String = "/usr/local/bin/ollama") {
@@ -48,11 +74,22 @@ final class OllamaCLIClient {
         return try await run(URL(fileURLWithPath: binary), arguments: ["ps"], timeout: 10)
     }
 
-    func readLogs(maxLines: Int = 200) async throws -> String {
+    func readLogs(
+        maxLines: Int = OllamaLogTail.defaultMaxLines,
+        maxBytes: UInt64 = OllamaLogTail.defaultMaxBytes
+    ) async throws -> String {
         let logURL = FileManager.default.homeDirectoryForCurrentUser
             .appendingPathComponent(".ollama/logs/server.log")
-        let text = try String(contentsOf: logURL, encoding: .utf8)
-        return text.split(separator: "\n").suffix(maxLines).joined(separator: "\n")
+        let handle = try FileHandle(forReadingFrom: logURL)
+        defer {
+            try? handle.close()
+        }
+
+        let fileSize = try handle.seekToEnd()
+        let startOffset = fileSize > maxBytes ? fileSize - maxBytes : 0
+        try handle.seek(toOffset: startOffset)
+        let data = try handle.readToEnd() ?? Data()
+        return OllamaLogTail.tail(data, wasTruncated: startOffset > 0, maxLines: maxLines)
     }
 
     private func run(_ executable: URL, arguments: [String], timeout: TimeInterval) async throws -> String {

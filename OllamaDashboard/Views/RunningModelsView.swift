@@ -49,7 +49,7 @@ struct RunningModelsView: View {
                 }
                 .frame(minHeight: 250)
                 HStack {
-                    Button("Warm Selected") {
+                    Button("Warm Again") {
                         Task { await warmSelected() }
                     }
                     .disabled(selectedModel == nil)
@@ -142,7 +142,11 @@ struct PendingUnloadConfirmation {
     }
 
     mutating func begin(for model: RunningModel?) {
-        modelName = model?.name
+        begin(forModelName: model?.name)
+    }
+
+    mutating func begin(forModelName name: String?) {
+        modelName = name
     }
 
     mutating func cancel() {

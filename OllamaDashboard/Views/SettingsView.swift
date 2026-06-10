@@ -37,9 +37,22 @@ struct SettingsView: View {
                         }
                     }
                 }
+                GridRow {
+                    Spacer()
+                    Toggle("Enable local Ollama proxy", isOn: $settings.enableProxy)
+                }
+                GridRow {
+                    Text("Proxy port")
+                    TextField(
+                        "Proxy port",
+                        value: $settings.proxyPort,
+                        format: .number.grouping(.never)
+                    )
+                    .textFieldStyle(.roundedBorder)
+                    .frame(width: 120, alignment: .leading)
+                }
             }
             Toggle("Show advanced service configuration notes", isOn: $settings.showAdvancedServiceNotes)
-            Toggle("Read local Ollama logs", isOn: $settings.readLocalLogs)
             Toggle("Confirm before unloading models", isOn: $settings.confirmUnload)
             if !detectionStatus.isEmpty {
                 Text(detectionStatus).foregroundStyle(.secondary)

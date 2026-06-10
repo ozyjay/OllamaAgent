@@ -1,5 +1,43 @@
 import SwiftUI
 
+private enum WorkbenchToolSection: String, CaseIterable, Identifiable {
+    case prompt
+    case benchmark
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .prompt: return "Prompt"
+        case .benchmark: return "Benchmark"
+        }
+    }
+}
+
+struct WorkbenchView: View {
+    @ObservedObject var monitor: OllamaServiceMonitor
+    @State private var selectedSection: WorkbenchToolSection = .prompt
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Picker("Workbench tools", selection: $selectedSection) {
+                ForEach(WorkbenchToolSection.allCases) { section in
+                    Text(section.label).tag(section)
+                }
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+
+            switch selectedSection {
+            case .prompt:
+                ContextView(monitor: monitor)
+            case .benchmark:
+                BenchmarkView(monitor: monitor)
+            }
+        }
+    }
+}
+
 struct ContextView: View {
     @ObservedObject var monitor: OllamaServiceMonitor
     @EnvironmentObject private var settings: AppSettings

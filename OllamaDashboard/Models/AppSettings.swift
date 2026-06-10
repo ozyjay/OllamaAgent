@@ -17,8 +17,11 @@ final class AppSettings: ObservableObject {
     @Published var showAdvancedServiceNotes: Bool {
         didSet { defaults.set(showAdvancedServiceNotes, forKey: Keys.showAdvancedServiceNotes) }
     }
-    @Published var readLocalLogs: Bool {
-        didSet { defaults.set(readLocalLogs, forKey: Keys.readLocalLogs) }
+    @Published var enableProxy: Bool {
+        didSet { defaults.set(enableProxy, forKey: Keys.enableProxy) }
+    }
+    @Published var proxyPort: Int {
+        didSet { defaults.set(proxyPort, forKey: Keys.proxyPort) }
     }
     @Published var confirmUnload: Bool {
         didSet { defaults.set(confirmUnload, forKey: Keys.confirmUnload) }
@@ -33,7 +36,8 @@ final class AppSettings: ObservableObject {
         enableCLIControls = defaults.object(forKey: Keys.enableCLIControls) as? Bool ?? false
         ollamaCLIPath = defaults.string(forKey: Keys.ollamaCLIPath) ?? "/usr/local/bin/ollama"
         showAdvancedServiceNotes = defaults.object(forKey: Keys.showAdvancedServiceNotes) as? Bool ?? false
-        readLocalLogs = defaults.object(forKey: Keys.readLocalLogs) as? Bool ?? false
+        enableProxy = defaults.object(forKey: Keys.enableProxy) as? Bool ?? false
+        proxyPort = defaults.object(forKey: Keys.proxyPort) as? Int ?? 11_435
         confirmUnload = defaults.object(forKey: Keys.confirmUnload) as? Bool ?? true
     }
 
@@ -75,6 +79,7 @@ private enum Keys {
     static let enableCLIControls = "enableCLIControls"
     static let ollamaCLIPath = "ollamaCLIPath"
     static let showAdvancedServiceNotes = "showAdvancedServiceNotes"
-    static let readLocalLogs = "readLocalLogs"
+    static let enableProxy = "enableProxy"
+    static let proxyPort = "proxyPort"
     static let confirmUnload = "confirmUnload"
 }

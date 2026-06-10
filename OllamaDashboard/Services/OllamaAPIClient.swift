@@ -16,12 +16,34 @@ enum OllamaAPIError: LocalizedError, Equatable {
     }
 }
 
-final class OllamaAPIClient {
+protocol OllamaAPIClientProviding {
+    func getVersion() async throws -> OllamaVersion
+    func getInstalledModels() async throws -> [InstalledModel]
+    func getRunningModels() async throws -> [RunningModel]
+    func showModel(name: String) async throws -> ModelDetail
+    func warmModel(name: String, keepAlive: String, numCtx: Int?, options: [String: JSONValue]) async throws -> WarmModelResult
+    func unloadModelViaAPI(name: String) async throws -> UnloadResult
+    func runBenchmark(
+        model: String,
+        prompt: String,
+        numCtx: Int?,
+        keepAlive: String,
+        options: [String: JSONValue]
+    ) async throws -> BenchmarkResult
+}
+
+protocol HTTPSessionProviding {
+    func data(for request: URLRequest) async throws -> (Data, URLResponse)
+}
+
+extension URLSession: HTTPSessionProviding {}
+
+final class OllamaAPIClient: OllamaAPIClientProviding {
     private let baseURL: URL
-    private let session: URLSession
+    private let session: any HTTPSessionProviding
     private let decoder: JSONDecoder
 
-    init(baseURL: URL, session: URLSession = .shared) {
+    init(baseURL: URL, session: any HTTPSessionProviding = URLSession.shared) {
         self.baseURL = baseURL
         self.session = session
         decoder = JSONDecoder()

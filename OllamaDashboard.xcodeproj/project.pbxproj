@@ -38,6 +38,11 @@
 		010000000000000000000104 /* tags.json in Resources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000104 /* tags.json */; };
 		010000000000000000000105 /* ps.json in Resources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000105 /* ps.json */; };
 		010000000000000000000106 /* generate.json in Resources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000106 /* generate.json */; };
+		010000000000000000000107 /* TestDoubles.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000107 /* TestDoubles.swift */; };
+		010000000000000000000108 /* OllamaAPIClientRequestTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000108 /* OllamaAPIClientRequestTests.swift */; };
+		010000000000000000000109 /* OllamaServiceMonitorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000109 /* OllamaServiceMonitorTests.swift */; };
+		01000000000000000000010A /* ProfileAndSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02000000000000000000010A /* ProfileAndSettingsTests.swift */; };
+		01000000000000000000010B /* FormattingAndViewPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02000000000000000000010B /* FormattingAndViewPolicyTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -82,6 +87,11 @@
 		020000000000000000000104 /* tags.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = Fixtures/tags.json; sourceTree = "<group>"; };
 		020000000000000000000105 /* ps.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = Fixtures/ps.json; sourceTree = "<group>"; };
 		020000000000000000000106 /* generate.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = Fixtures/generate.json; sourceTree = "<group>"; };
+		020000000000000000000107 /* TestDoubles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestDoubles.swift; sourceTree = "<group>"; };
+		020000000000000000000108 /* OllamaAPIClientRequestTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OllamaAPIClientRequestTests.swift; sourceTree = "<group>"; };
+		020000000000000000000109 /* OllamaServiceMonitorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OllamaServiceMonitorTests.swift; sourceTree = "<group>"; };
+		02000000000000000000010A /* ProfileAndSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileAndSettingsTests.swift; sourceTree = "<group>"; };
+		02000000000000000000010B /* FormattingAndViewPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormattingAndViewPolicyTests.swift; sourceTree = "<group>"; };
 		040000000000000000000001 /* OllamaDashboard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OllamaDashboard.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		040000000000000000000002 /* OllamaDashboardTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = OllamaDashboardTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -138,6 +148,11 @@
 			children = (
 				020000000000000000000101 /* ModelParsingTests.swift */,
 				020000000000000000000102 /* OllamaAPIClientTests.swift */,
+				020000000000000000000108 /* OllamaAPIClientRequestTests.swift */,
+				020000000000000000000109 /* OllamaServiceMonitorTests.swift */,
+				02000000000000000000010A /* ProfileAndSettingsTests.swift */,
+				02000000000000000000010B /* FormattingAndViewPolicyTests.swift */,
+				020000000000000000000107 /* TestDoubles.swift */,
 				020000000000000000000103 /* Fixtures.swift */,
 				020000000000000000000104 /* tags.json */,
 				020000000000000000000105 /* ps.json */,
@@ -280,6 +295,11 @@
 			files = (
 				010000000000000000000101 /* ModelParsingTests.swift in Sources */,
 				010000000000000000000102 /* OllamaAPIClientTests.swift in Sources */,
+				010000000000000000000108 /* OllamaAPIClientRequestTests.swift in Sources */,
+				010000000000000000000109 /* OllamaServiceMonitorTests.swift in Sources */,
+				01000000000000000000010A /* ProfileAndSettingsTests.swift in Sources */,
+				01000000000000000000010B /* FormattingAndViewPolicyTests.swift in Sources */,
+				010000000000000000000107 /* TestDoubles.swift in Sources */,
 				010000000000000000000103 /* Fixtures.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

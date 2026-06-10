@@ -3,8 +3,9 @@ import SwiftUI
 struct MenuBarView: View {
     @EnvironmentObject private var settings: AppSettings
     @EnvironmentObject private var profiles: ProfileManager
+    @EnvironmentObject private var proxy: OllamaProxyServer
     @ObservedObject var monitor: OllamaServiceMonitor
-    @State private var selectedTab: DashboardTab = .service
+    @State private var selectedTab: DashboardTab = .logs
     @State private var autoRefreshTask: Task<Void, Never>?
 
     var body: some View {
@@ -24,6 +25,7 @@ struct MenuBarView: View {
         .frame(width: 720, height: 540, alignment: .topLeading)
         .onAppear {
             Task { await monitor.refreshAll() }
+            Task { await proxy.apply(settings: settings) }
             configureAutoRefresh()
         }
         .onDisappear {
@@ -32,27 +34,28 @@ struct MenuBarView: View {
         .onChange(of: settings.refreshInterval) { _ in
             configureAutoRefresh()
         }
+        .onChange(of: settings.enableProxy) { _ in
+            Task { await proxy.apply(settings: settings) }
+        }
+        .onChange(of: settings.proxyPort) { _ in
+            Task { await proxy.apply(settings: settings) }
+        }
+        .onChange(of: settings.baseURLString) { _ in
+            Task { await proxy.apply(settings: settings) }
+        }
     }
 
     @ViewBuilder
     private var tabContent: some View {
         switch selectedTab {
-        case .service:
+        case .logs:
             ServiceStatusView(monitor: monitor)
-        case .installed:
-            InstalledModelsView(monitor: monitor)
-        case .running:
-            RunningModelsView(monitor: monitor)
-        case .context:
-            ContextView(monitor: monitor)
-        case .benchmark:
-            BenchmarkView(monitor: monitor)
         case .profiles:
             ProfilesView(monitor: monitor)
+        case .models:
+            ModelsView(monitor: monitor)
         case .settings:
             SettingsView()
-        case .advanced:
-            AdvancedView()
         }
     }
 

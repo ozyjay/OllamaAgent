@@ -68,7 +68,117 @@ final class OllamaAPIClientTests: XCTestCase {
         XCTAssertEqual(settings.baseURLString, "http://localhost:11434")
         XCTAssertEqual(settings.refreshInterval, .manual)
         XCTAssertFalse(settings.enableCLIControls)
+        XCTAssertFalse(settings.enableProxy)
+        XCTAssertEqual(settings.proxyPort, 11_435)
         XCTAssertTrue(settings.confirmUnload)
+    }
+
+    func testDashboardTabsUseCoreMoreOrder() {
+        XCTAssertEqual(DashboardTab.allCases.map(\.rawValue), [
+            "Logs",
+            "Profiles",
+            "Models",
+            "Settings"
+        ])
+    }
+
+    func testModelStatusPolicyMarksInstalledModelsWarmWhenLoaded() {
+        let now = Date(timeIntervalSince1970: 1_000)
+        let installed = [
+            makeInstalledModel(name: "llama3.2:latest"),
+            makeInstalledModel(name: "qwen2.5-coder:7b")
+        ]
+        let running = [makeRunningModel(name: "qwen2.5-coder:7b", expiresAt: now.addingTimeInterval(125))]
+
+        XCTAssertEqual(
+            ModelStatusPolicy.statusRows(installedModels: installed, runningModels: running, now: now),
+            [
+                ModelStatusRow(modelName: "llama3.2:latest", status: .idle, timeRemaining: nil),
+                ModelStatusRow(modelName: "qwen2.5-coder:7b", status: .warm, timeRemaining: "2m 5s")
+            ]
+        )
+    }
+
+    func testWarmTimeRemainingFormatterUsesCompactUnits() {
+        XCTAssertEqual(WarmTimeRemainingFormatter.string(from: 45), "45s")
+        XCTAssertEqual(WarmTimeRemainingFormatter.string(from: 120), "2m")
+        XCTAssertEqual(WarmTimeRemainingFormatter.string(from: 125), "2m 5s")
+        XCTAssertEqual(WarmTimeRemainingFormatter.string(from: 3_900), "1h 5m")
+        XCTAssertEqual(WarmTimeRemainingFormatter.string(from: -10), "0s")
+    }
+
+    func testModelStatusPolicyMarksProxyActiveModelsBusy() {
+        let installed = [makeInstalledModel(name: "qwen2.5-coder:7b")]
+        let running = [makeRunningModel(name: "qwen2.5-coder:7b")]
+
+        XCTAssertEqual(
+            ModelStatusPolicy.statusRows(
+                installedModels: installed,
+                runningModels: running,
+                activeModelNames: ["qwen2.5-coder:7b"]
+            ),
+            [
+                ModelStatusRow(modelName: "qwen2.5-coder:7b", status: .busy, timeRemaining: nil)
+            ]
+        )
+    }
+
+    func testProxyRequestParserExtractsModelFromJSONBodies() {
+        XCTAssertEqual(
+            OllamaProxyRequestParser.modelName(from: Data(#"{"model":"qwen3:latest","prompt":"hi"}"#.utf8)),
+            "qwen3:latest"
+        )
+        XCTAssertEqual(
+            OllamaProxyRequestParser.modelName(from: Data(#"{"model":"  "}"#.utf8)),
+            nil
+        )
+        XCTAssertEqual(OllamaProxyRequestParser.modelName(from: Data("not json".utf8)), nil)
+    }
+
+    func testModelWarmRequestUsesSelectedModelWhenProfileIsMissing() {
+        let request = ModelWarmRequest.resolve(
+            selectedModelName: "llama3.2:latest",
+            profile: nil,
+            modelMaxContext: nil
+        )
+
+        XCTAssertEqual(request.model, "llama3.2:latest")
+        XCTAssertEqual(request.keepAlive, "30m")
+        XCTAssertNil(request.numCtx)
+        XCTAssertEqual(request.options, [:])
+        XCTAssertEqual(request.statusDetail, "keep_alive 30m, model default context.")
+    }
+
+    func testModelWarmRequestAppliesProfileSettingsToSelectedInstalledModelWarmUp() {
+        let profile = RuntimeProfile(
+            id: UUID(),
+            name: "Coding",
+            preferredModel: "different-model:latest",
+            contextPolicy: .balanced,
+            contextOverrides: [],
+            keepAlive: "1h",
+            numPredict: 4096,
+            temperature: 0.2,
+            generationOptions: ProfileGenerationOptions(
+                temperature: 0.4,
+                numPredict: 1024
+            ),
+            notes: "",
+            purpose: "Stable coding assistant"
+        )
+
+        let request = ModelWarmRequest.resolve(
+            selectedModelName: "qwen2.5-coder:7b",
+            profile: profile,
+            modelMaxContext: 65_536
+        )
+
+        XCTAssertEqual(request.model, "qwen2.5-coder:7b")
+        XCTAssertEqual(request.keepAlive, "1h")
+        XCTAssertEqual(request.numCtx, 32_768)
+        XCTAssertEqual(request.options["temperature"], .number(0.4))
+        XCTAssertEqual(request.options["num_predict"], .number(1024))
+        XCTAssertEqual(request.statusDetail, "keep_alive 1h, num_ctx 32768 from profile policy.")
     }
 
     func testPendingUnloadConfirmationKeepsSelectedModelNameUntilConfirmed() {

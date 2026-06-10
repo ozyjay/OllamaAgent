@@ -23,15 +23,17 @@ struct LogsView: View {
             Text("Logs").font(.title3.bold())
             HStack {
                 Button("Refresh") { Task { await refresh() } }
-                    .disabled(!settings.readLocalLogs)
                 Button("Copy Logs") {
                     NSPasteboard.general.clearContents()
                     NSPasteboard.general.setString(logText, forType: .string)
                 }
                 Button("Clear View") { logText = "" }
             }
+            Text("Showing the last \(OllamaLogTail.defaultMaxLines) lines from at most \(ByteFormatter.string(from: Int64(OllamaLogTail.defaultMaxBytes))) of the local Ollama server log.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
             ScrollView {
-                Text(settings.readLocalLogs ? (logText.isEmpty ? "No log lines loaded." : logText) : "Enable local log reading in Settings.")
+                Text(logText.isEmpty ? "No log lines loaded." : logText)
                     .font(.system(.caption, design: .monospaced))
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .textSelection(.enabled)
@@ -41,7 +43,10 @@ struct LogsView: View {
 
     private func refresh() async {
         do {
-            logText = try await OllamaCLIClient(executablePath: settings.ollamaCLIPath).readLogs(maxLines: 200)
+            logText = try await OllamaCLIClient(executablePath: settings.ollamaCLIPath).readLogs(
+                maxLines: OllamaLogTail.defaultMaxLines,
+                maxBytes: OllamaLogTail.defaultMaxBytes
+            )
         } catch {
             logText = error.localizedDescription
         }

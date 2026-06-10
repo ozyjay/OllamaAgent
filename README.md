@@ -7,11 +7,12 @@ The app is designed as a lightweight local systems dashboard for:
 - Ollama service reachability and version
 - installed models from `/api/tags`
 - loaded/running models from `/api/ps`
-- model warming and unloading
+- model warm up, keep-alive refresh, and unloading
 - model-aware app-side runtime profiles
 - context test prompts
 - simple benchmark timing
-- optional read-only logs and service configuration notes
+- bounded read-only logs and optional service configuration notes
+- optional localhost proxy for tracking active external Ollama requests
 
 ## Run
 
@@ -52,14 +53,10 @@ To install somewhere else, pass a destination folder:
 
 ## Features
 
-- Service status: reachable/offline state, version, base URL, last refresh, local URL/docs buttons.
-- Installed models: refresh, search, sort, digest/size/date display, and `/api/show` details.
-- Running models: refresh, copy model name, warm selected model, unload selected model with confirmation.
-- Context: run a test prompt with an explicit or profile-resolved `num_ctx` value.
-- Benchmark: run prompt presets and show timing stats when Ollama returns them.
+- Logs: reachable/offline state, version, base URL, last refresh, local URL/docs buttons, proxy status, logs, and optional service configuration notes.
 - Profiles: editable built-in presets with fallback context policies and exact per-model context overrides.
-- Settings: base URL, refresh interval, CLI enablement, CLI path, logs, and confirmations.
-- Advanced: read-only log viewer and copyable `launchctl setenv` examples.
+- Models: installed model search/sort/details, Idle/Warm/Busy status with remaining keep-alive time, last warm-up profile used, warm up for any installed model, copy model name, and unload warm models with confirmation.
+- Settings: base URL, refresh interval, CLI enablement, CLI path, local proxy, diagnostics notes, and confirmations.
 
 ## MVP Limits
 
@@ -73,11 +70,15 @@ To install somewhere else, pass a destination folder:
 
 API-backed features use Ollama's public `/api` endpoints: version, tags, ps, show, generate, warming, unloading by `keep_alive: 0`, and benchmark timing.
 
-CLI-backed features are opt-in: `ollama stop`, raw `ollama ps`, and reading `~/.ollama/logs/server.log`. Model names are validated and passed to `Process` as arguments, not interpolated into shell commands.
+CLI-backed controls are opt-in: `ollama stop` and raw `ollama ps`. Model names are validated and passed to `Process` as arguments, not interpolated into shell commands.
+
+The Logs view reads `~/.ollama/logs/server.log` directly and only loads the final bounded slice of the file before showing the last 200 lines.
+
+Proxy mode is optional. When enabled, point compatible clients at the dashboard proxy URL, for example `http://localhost:11435`, instead of the Ollama base URL. The proxy forwards requests to Ollama and marks proxied models as Busy while responses are in flight.
 
 ## Manual Ollama Configuration
 
-The Service Configuration panel lists common environment variables and copyable commands such as:
+When enabled in Settings, the Logs diagnostics area lists common environment variables and copyable commands such as:
 
 ```powershell
 launchctl setenv OLLAMA_CONTEXT_LENGTH <value>
