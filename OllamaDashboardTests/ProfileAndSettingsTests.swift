@@ -17,6 +17,16 @@ final class ProfileAndSettingsTests: XCTestCase {
         settings.enableProxy = true
         settings.proxyPort = 12_345
         settings.confirmUnload = false
+        settings.enablePromptGuardrails = false
+        settings.promptGuardrailResponseMode = .httpError
+        settings.promptGuardrailWarnPromptCharacters = 10
+        settings.promptGuardrailBlockPromptCharacters = 20
+        settings.promptGuardrailWarnBodyBytes = 30
+        settings.promptGuardrailBlockBodyBytes = 40
+        settings.promptGuardrailWarnMessages = 5
+        settings.promptGuardrailBlockMessages = 6
+        settings.promptGuardrailWarnContextRatio = 0.5
+        settings.promptGuardrailBlockContextRatio = 0.9
 
         let reloaded = AppSettings(defaults: suite)
 
@@ -28,6 +38,16 @@ final class ProfileAndSettingsTests: XCTestCase {
         XCTAssertTrue(reloaded.enableProxy)
         XCTAssertEqual(reloaded.proxyPort, 12_345)
         XCTAssertFalse(reloaded.confirmUnload)
+        XCTAssertFalse(reloaded.enablePromptGuardrails)
+        XCTAssertEqual(reloaded.promptGuardrailResponseMode, .httpError)
+        XCTAssertEqual(reloaded.promptGuardrailWarnPromptCharacters, 10)
+        XCTAssertEqual(reloaded.promptGuardrailBlockPromptCharacters, 20)
+        XCTAssertEqual(reloaded.promptGuardrailWarnBodyBytes, 30)
+        XCTAssertEqual(reloaded.promptGuardrailBlockBodyBytes, 40)
+        XCTAssertEqual(reloaded.promptGuardrailWarnMessages, 5)
+        XCTAssertEqual(reloaded.promptGuardrailBlockMessages, 6)
+        XCTAssertEqual(reloaded.promptGuardrailWarnContextRatio, 0.5)
+        XCTAssertEqual(reloaded.promptGuardrailBlockContextRatio, 0.9)
     }
 
     func testProfileManagerFallsBackToBuiltInsForMissingEmptyAndCorruptFiles() throws {

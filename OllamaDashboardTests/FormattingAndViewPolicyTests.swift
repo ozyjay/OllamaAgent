@@ -265,6 +265,42 @@ final class FormattingAndViewPolicyTests: XCTestCase {
         XCTAssertEqual(entries[2].summary, "Model gemma4:12b: loading model")
     }
 
+    func testSystemResourceParserReadsTopCPUUsage() throws {
+        let output = """
+        Processes: 488 total, 3 running, 485 sleeping
+        CPU usage: 12.3% user, 4.7% sys, 83.0% idle
+        """
+
+        let usage = try XCTUnwrap(SystemResourceParser.cpuUsage(from: output))
+
+        XCTAssertEqual(usage.userPercent, 12.3, accuracy: 0.001)
+        XCTAssertEqual(usage.systemPercent, 4.7, accuracy: 0.001)
+        XCTAssertEqual(usage.idlePercent, 83.0, accuracy: 0.001)
+        XCTAssertEqual(usage.busyPercent, 17.0, accuracy: 0.001)
+    }
+
+    func testSystemResourceParserReadsOllamaGPUMemoryAndPeak() throws {
+        let text = """
+        time=2026-06-11T10:00:00 level=INFO msg="gpu memory" id=0 library=Metal available="51.3 GiB" free="51.8 GiB" minimum="512.0 MiB" overhead="0 B"
+        time=2026-06-11T10:01:00 level=INFO msg="load tensors" size="25.10 GiB" peak memory="25.10 GiB"
+        """
+
+        let status = try XCTUnwrap(SystemResourceParser.gpuStatus(from: text))
+
+        XCTAssertEqual(status.availableBytes, 55_082_955_571)
+        XCTAssertEqual(status.freeBytes, 55_619_826_483)
+        XCTAssertEqual(status.peakBytes, 26_950_919_782)
+        XCTAssertEqual(try XCTUnwrap(status.usageFraction), 0.4893, accuracy: 0.001)
+    }
+
+    func testSystemResourceParserFallsBackToGPUMemoryPressureWhenPeakIsMissing() throws {
+        let text = #"level=INFO msg="gpu memory" id=0 library=Metal available="20 GiB" free="5 GiB""#
+
+        let status = try XCTUnwrap(SystemResourceParser.gpuStatus(from: text))
+
+        XCTAssertEqual(try XCTUnwrap(status.usageFraction), 0.75, accuracy: 0.001)
+    }
+
     func testCLIRejectsInvalidModelNameBeforeExecutableLookup() async {
         let client = OllamaCLIClient(executablePath: "/definitely/not/ollama")
 

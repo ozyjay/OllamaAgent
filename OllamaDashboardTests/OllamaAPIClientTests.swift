@@ -80,6 +80,34 @@ final class OllamaAPIClientTests: XCTestCase {
             "Models",
             "Settings"
         ])
+        XCTAssertEqual(DashboardTab.allCases.map(\.systemImage), [
+            "doc.text.magnifyingglass",
+            "slider.horizontal.3",
+            "shippingbox",
+            "gearshape"
+        ])
+        XCTAssertTrue(DashboardTab.allCases.allSatisfy { !$0.navigationTitle.isEmpty })
+        XCTAssertTrue(DashboardTab.allCases.allSatisfy { !$0.menuTitle.isEmpty })
+    }
+
+    @MainActor
+    func testDashboardNavigationDefaultsToLogs() {
+        let navigation = DashboardNavigation()
+
+        XCTAssertEqual(navigation.selectedTab, .logs)
+    }
+
+    func testStatusMenuDestinationsMapToNavigationTabs() {
+        XCTAssertEqual(StatusMenuDestination.allCases.map(\.title), [
+            "Logs",
+            "Models",
+            "Settings"
+        ])
+        XCTAssertEqual(StatusMenuDestination.allCases.map(\.tab), [
+            .logs,
+            .models,
+            .settings
+        ])
     }
 
     func testModelStatusPolicyMarksInstalledModelsWarmWhenLoaded() {
@@ -117,7 +145,78 @@ final class OllamaAPIClientTests: XCTestCase {
         XCTAssertFalse(InstalledModelActionPolicy.canWarmSelected(status: .warm, isWarming: false))
         XCTAssertFalse(InstalledModelActionPolicy.canWarmSelected(status: .busy, isWarming: false))
         XCTAssertFalse(InstalledModelActionPolicy.canWarmSelected(status: .idle, isWarming: true))
+        XCTAssertFalse(InstalledModelActionPolicy.canWarmSelected(status: .idle, isWarming: false, isUnloading: true))
         XCTAssertTrue(InstalledModelActionPolicy.canWarmSelected(status: .idle, isWarming: false))
+
+        XCTAssertFalse(InstalledModelActionPolicy.canUnloadSelected(isWarm: false, isWarming: false, isUnloading: false))
+        XCTAssertFalse(InstalledModelActionPolicy.canUnloadSelected(isWarm: true, isWarming: true, isUnloading: false))
+        XCTAssertFalse(InstalledModelActionPolicy.canUnloadSelected(isWarm: true, isWarming: false, isUnloading: true))
+        XCTAssertTrue(InstalledModelActionPolicy.canUnloadSelected(isWarm: true, isWarming: false, isUnloading: false))
+
+        XCTAssertFalse(InstalledModelActionPolicy.canUseSelectionActions(hasSelection: false, isWarming: false, isUnloading: false))
+        XCTAssertFalse(InstalledModelActionPolicy.canUseSelectionActions(hasSelection: true, isWarming: true, isUnloading: false))
+        XCTAssertFalse(InstalledModelActionPolicy.canUseSelectionActions(hasSelection: true, isWarming: false, isUnloading: true))
+        XCTAssertTrue(InstalledModelActionPolicy.canUseSelectionActions(hasSelection: true, isWarming: false, isUnloading: false))
+    }
+
+    func testModelLifecycleTransitionPolicyWaitsForObservedStatusChanges() {
+        let now = Date(timeIntervalSince1970: 1_000)
+        let installed = [makeInstalledModel(name: "llama3.2:latest")]
+        let warmRunning = [makeRunningModel(name: "llama3.2", expiresAt: now.addingTimeInterval(60))]
+        let expiredRunning = [makeRunningModel(name: "llama3.2", expiresAt: now.addingTimeInterval(-1))]
+
+        XCTAssertTrue(ModelLifecycleTransitionPolicy.installedModelReached(
+            modelName: "llama3.2:latest",
+            targetStatus: .warm,
+            installedModels: installed,
+            runningModels: warmRunning,
+            activeModelNames: [],
+            now: now
+        ))
+        XCTAssertFalse(ModelLifecycleTransitionPolicy.installedModelReached(
+            modelName: "llama3.2:latest",
+            targetStatus: .idle,
+            installedModels: installed,
+            runningModels: warmRunning,
+            activeModelNames: [],
+            now: now
+        ))
+        XCTAssertTrue(ModelLifecycleTransitionPolicy.installedModelReached(
+            modelName: "llama3.2:latest",
+            targetStatus: .idle,
+            installedModels: installed,
+            runningModels: expiredRunning,
+            activeModelNames: [],
+            now: now
+        ))
+        XCTAssertFalse(ModelLifecycleTransitionPolicy.runningModelIsAbsent(
+            modelName: "llama3.2:latest",
+            runningModels: warmRunning,
+            now: now
+        ))
+        XCTAssertTrue(ModelLifecycleTransitionPolicy.runningModelIsAbsent(
+            modelName: "llama3.2:latest",
+            runningModels: expiredRunning,
+            now: now
+        ))
+    }
+
+    func testPreferredModelSelectionPolicySelectsProfilePreferredInstalledModel() {
+        let installed = [
+            makeInstalledModel(name: "llama3.2:latest"),
+            makeInstalledModel(name: "qwen3:27b")
+        ]
+        var profile = RuntimeProfile.builtIns[0]
+        profile.preferredModel = "llama3.2"
+
+        XCTAssertEqual(
+            PreferredModelSelectionPolicy.selectedInstalledModelID(for: profile, installedModels: installed),
+            installed[0].id
+        )
+
+        profile.preferredModel = "missing:latest"
+        XCTAssertNil(PreferredModelSelectionPolicy.selectedInstalledModelID(for: profile, installedModels: installed))
+        XCTAssertNil(PreferredModelSelectionPolicy.selectedInstalledModelID(for: nil, installedModels: installed))
     }
 
     func testWarmTimeRemainingFormatterUsesCompactUnits() {
@@ -234,6 +333,161 @@ final class OllamaAPIClientTests: XCTestCase {
         XCTAssertNil(metadata.promptCharacterCount)
     }
 
+    func testPromptGuardrailPolicyAllowsSmallPrompts() {
+        let metadata = OllamaProxyRequestMetadata(
+            model: "qwen3:latest",
+            path: "/api/generate",
+            bodyByteCount: 512,
+            stream: false,
+            numCtx: 8_192,
+            numPredict: 128,
+            messageCount: nil,
+            promptCharacterCount: 1_000
+        )
+
+        let decision = PromptGuardrailPolicy.defaults.evaluate(metadata)
+
+        XCTAssertEqual(decision.outcome, .allowed)
+        XCTAssertEqual(decision.estimatedTokenCount, 250)
+        XCTAssertTrue(decision.reasons.isEmpty)
+    }
+
+    func testPromptGuardrailPolicyWarnsAndBlocksAtScaleThresholds() {
+        let warnMetadata = OllamaProxyRequestMetadata(
+            model: "qwen3:latest",
+            path: "/v1/chat/completions",
+            bodyByteCount: 1_100_000,
+            stream: false,
+            numCtx: nil,
+            numPredict: nil,
+            messageCount: 21,
+            promptCharacterCount: 130_000
+        )
+        let blockMetadata = OllamaProxyRequestMetadata(
+            model: "qwen3:latest",
+            path: "/v1/chat/completions",
+            bodyByteCount: 2_700_000,
+            stream: false,
+            numCtx: nil,
+            numPredict: nil,
+            messageCount: 61,
+            promptCharacterCount: 310_000
+        )
+
+        let warnDecision = PromptGuardrailPolicy.defaults.evaluate(warnMetadata)
+        let blockDecision = PromptGuardrailPolicy.defaults.evaluate(blockMetadata)
+
+        XCTAssertEqual(warnDecision.outcome, .warned)
+        XCTAssertTrue(warnDecision.summary.contains("prompt characters"))
+        XCTAssertEqual(blockDecision.outcome, .blocked)
+        XCTAssertTrue(blockDecision.summary.contains("body bytes"))
+        XCTAssertFalse(blockDecision.summary.contains("qwen3"))
+    }
+
+    func testPromptGuardrailPolicyUsesPromptToContextRatio() {
+        let warning = OllamaProxyRequestMetadata(
+            model: "qwen3:latest",
+            path: "/api/chat",
+            bodyByteCount: 10_000,
+            stream: false,
+            numCtx: 4_000,
+            numPredict: nil,
+            messageCount: 2,
+            promptCharacterCount: 12_400
+        )
+        let blocked = OllamaProxyRequestMetadata(
+            model: "qwen3:latest",
+            path: "/api/chat",
+            bodyByteCount: 10_000,
+            stream: false,
+            numCtx: 4_000,
+            numPredict: nil,
+            messageCount: 2,
+            promptCharacterCount: 17_800
+        )
+
+        XCTAssertEqual(PromptGuardrailPolicy.defaults.evaluate(warning).outcome, .warned)
+        XCTAssertEqual(PromptGuardrailPolicy.defaults.evaluate(blocked).outcome, .blocked)
+    }
+
+    func testPromptGuardrailPolicyFallsBackToBodySizeForInvalidJSONMetadata() {
+        let metadata = OllamaProxyRequestParser.metadata(path: "/api/generate", body: Data(repeating: 65, count: 2_700_000))
+
+        let decision = PromptGuardrailPolicy.defaults.evaluate(metadata)
+
+        XCTAssertEqual(decision.outcome, .blocked)
+        XCTAssertNil(decision.estimatedTokenCount)
+        XCTAssertTrue(decision.summary.contains("body bytes"))
+    }
+
+    func testPromptGuardrailResponderBuildsEndpointCompatibleResponses() throws {
+        let metadata = OllamaProxyRequestMetadata(
+            model: "qwen3:latest",
+            path: "/v1/chat/completions",
+            bodyByteCount: 2_700_000,
+            stream: false,
+            numCtx: 4_000,
+            numPredict: nil,
+            messageCount: 61,
+            promptCharacterCount: 310_000
+        )
+        let decision = PromptGuardrailPolicy.defaults.evaluate(metadata)
+
+        let openAI = PromptGuardrailResponder.response(for: metadata, decision: decision)
+        let openAIObject = try XCTUnwrap(JSONSerialization.jsonObject(with: openAI.body) as? [String: Any])
+        let choices = try XCTUnwrap(openAIObject["choices"] as? [[String: Any]])
+        let message = try XCTUnwrap(choices.first?["message"] as? [String: Any])
+        let content = try XCTUnwrap(message["content"] as? String)
+        XCTAssertEqual(openAI.contentType, "application/json")
+        XCTAssertTrue(content.contains("blocked before reaching Ollama"))
+        XCTAssertTrue(content.contains("310000 prompt chars"))
+        XCTAssertFalse(content.contains("secret"))
+
+        let openAIStreamMetadata = OllamaProxyRequestMetadata(
+            model: "qwen3:latest",
+            path: "/v1/chat/completions",
+            bodyByteCount: 2_700_000,
+            stream: true,
+            numCtx: 4_000,
+            numPredict: nil,
+            messageCount: 61,
+            promptCharacterCount: 310_000
+        )
+        let openAIStream = PromptGuardrailResponder.response(for: openAIStreamMetadata, decision: decision)
+        let openAIStreamText = String(decoding: openAIStream.body, as: UTF8.self)
+        XCTAssertEqual(openAIStream.contentType, "text/event-stream; charset=utf-8")
+        XCTAssertTrue(openAIStreamText.contains("data: "))
+        XCTAssertTrue(openAIStreamText.hasSuffix("data: [DONE]\n\n"))
+
+        let ollamaChatMetadata = OllamaProxyRequestMetadata(
+            model: "qwen3:latest",
+            path: "/api/chat",
+            bodyByteCount: 2_700_000,
+            stream: false,
+            numCtx: 4_000,
+            numPredict: nil,
+            messageCount: 61,
+            promptCharacterCount: 310_000
+        )
+        let ollamaChat = PromptGuardrailResponder.response(for: ollamaChatMetadata, decision: decision)
+        let chatObject = try XCTUnwrap(JSONSerialization.jsonObject(with: ollamaChat.body) as? [String: Any])
+        XCTAssertNotNil(chatObject["message"])
+
+        let ollamaGenerateMetadata = OllamaProxyRequestMetadata(
+            model: "qwen3:latest",
+            path: "/api/generate",
+            bodyByteCount: 2_700_000,
+            stream: false,
+            numCtx: 4_000,
+            numPredict: nil,
+            messageCount: nil,
+            promptCharacterCount: 310_000
+        )
+        let ollamaGenerate = PromptGuardrailResponder.response(for: ollamaGenerateMetadata, decision: decision)
+        let generateObject = try XCTUnwrap(JSONSerialization.jsonObject(with: ollamaGenerate.body) as? [String: Any])
+        XCTAssertNotNil(generateObject["response"])
+    }
+
     func testProxyDiagnosticRecordsSummarizeFailuresAndCapHistory() {
         let proxy = OllamaProxyServer()
         let startedAt = Date(timeIntervalSince1970: 1_000)
@@ -247,12 +501,14 @@ final class OllamaAPIClientTests: XCTestCase {
             startedAt: startedAt,
             endedAt: startedAt.addingTimeInterval(60),
             upstreamStatusCode: 500,
-            proxyError: nil
+            proxyError: nil,
+            guardrailDecision: .allowed
         )
 
         XCTAssertEqual(proxy.diagnosticRecords.count, 1)
         XCTAssertEqual(proxy.diagnosticRecords[0].duration, 60)
         XCTAssertTrue(proxy.diagnosticRecords[0].isLikelyProviderTimeout)
+        XCTAssertEqual(proxy.diagnosticRecords[0].guardrailOutcome, .allowed)
         XCTAssertFalse(proxy.diagnosticsSummary().contains("private"))
 
         for index in 0..<55 {
@@ -265,7 +521,8 @@ final class OllamaAPIClientTests: XCTestCase {
                 startedAt: startedAt.addingTimeInterval(Double(index)),
                 endedAt: startedAt.addingTimeInterval(Double(index + 1)),
                 upstreamStatusCode: 200,
-                proxyError: nil
+                proxyError: nil,
+                guardrailDecision: .allowed
             )
         }
 
@@ -274,6 +531,30 @@ final class OllamaAPIClientTests: XCTestCase {
 
         proxy.clearDiagnostics()
         XCTAssertTrue(proxy.diagnosticRecords.isEmpty)
+    }
+
+    func testProxyDiagnosticRecordsSummarizeGuardrailBlocksWithoutPromptText() {
+        let proxy = OllamaProxyServer()
+        let startedAt = Date(timeIntervalSince1970: 2_000)
+        let metadata = OllamaProxyRequestParser.metadata(
+            path: "/v1/chat/completions",
+            body: Data(#"{"model":"qwen3:latest","messages":[{"role":"user","content":"secret huge prompt"}],"num_ctx":4}"#.utf8)
+        )
+        let decision = PromptGuardrailPolicy.defaults.evaluate(metadata)
+
+        proxy.recordDiagnostic(
+            metadata: metadata,
+            startedAt: startedAt,
+            endedAt: startedAt,
+            upstreamStatusCode: nil,
+            proxyError: nil,
+            guardrailDecision: decision
+        )
+
+        XCTAssertEqual(proxy.diagnosticRecords[0].guardrailOutcome, .blocked)
+        XCTAssertNil(proxy.diagnosticRecords[0].upstreamStatusCode)
+        XCTAssertTrue(proxy.diagnosticsSummary().contains("guardrail blocked"))
+        XCTAssertFalse(proxy.diagnosticsSummary().contains("secret huge prompt"))
     }
 
     func testModelWarmRequestUsesSelectedModelWhenProfileIsMissing() {

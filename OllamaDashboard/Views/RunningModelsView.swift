@@ -11,12 +11,18 @@ struct RunningModelsView: View {
     @State private var generationOptions: [String: JSONValue] = [:]
     @State private var status = ""
     @State private var pendingUnload = PendingUnloadConfirmation()
+    @State private var isWarming = false
+    @State private var isUnloading = false
 
     private let keepAliveOptions = ["0", "5m", "30m", "1h", "24h", "-1"]
 
     private var selectedModel: RunningModel? {
         guard let selectedModelID else { return nil }
         return monitor.runningModels.first { $0.id == selectedModelID }
+    }
+
+    private var isModelActionRunning: Bool {
+        isWarming || isUnloading
     }
 
     var body: some View {
@@ -29,13 +35,16 @@ struct RunningModelsView: View {
                     ForEach(profiles.profiles) { Text($0.name).tag(Optional($0.id)) }
                 }
                 .frame(width: 190)
+                .disabled(isModelActionRunning)
                 Button("Apply") { Task { await applyProfile() } }
-                    .disabled(selectedProfileID == nil)
+                    .disabled(selectedProfileID == nil || isModelActionRunning)
                 Picker("Keep alive", selection: $keepAlive) {
                     ForEach(keepAliveOptions, id: \.self) { Text($0).tag($0) }
                 }
                 .frame(width: 140)
+                .disabled(isModelActionRunning)
                 Button("Refresh") { Task { await monitor.refreshAll() } }
+                    .disabled(isModelActionRunning)
             }
             if monitor.runningModels.isEmpty {
                 EmptyStateView(title: "No loaded models", detail: "Warm an installed model or run an Ollama request.")
@@ -48,11 +57,12 @@ struct RunningModelsView: View {
                     TableColumn("Digest") { Text($0.digest ?? "Unknown").lineLimit(1) }
                 }
                 .frame(minHeight: 250)
+                .disabled(isModelActionRunning)
                 HStack {
-                    Button("Warm Again") {
+                    Button(modelActionButtonTitle) {
                         Task { await warmSelected() }
                     }
-                    .disabled(selectedModel == nil)
+                    .disabled(selectedModel == nil || isModelActionRunning)
                     Button("Unload Selected") {
                         if settings.confirmUnload {
                             pendingUnload.begin(for: selectedModel)
@@ -60,14 +70,14 @@ struct RunningModelsView: View {
                             Task { await unloadSelected() }
                         }
                     }
-                    .disabled(selectedModel == nil)
+                    .disabled(selectedModel == nil || isModelActionRunning)
                     Button("Copy Model Name") {
                         if let name = selectedModel?.name {
                             NSPasteboard.general.clearContents()
                             NSPasteboard.general.setString(name, forType: .string)
                         }
                     }
-                    .disabled(selectedModel == nil)
+                    .disabled(selectedModel == nil || isModelActionRunning)
                     Spacer()
                 }
                 if pendingUnload.isPresented, let modelName = pendingUnload.modelName {
@@ -81,9 +91,11 @@ struct RunningModelsView: View {
                                 Task { await unload(modelName: name) }
                             }
                         }
+                        .disabled(isModelActionRunning)
                         Button("Cancel") {
                             pendingUnload.cancel()
                         }
+                        .disabled(isModelActionRunning)
                     }
                 }
                 if !status.isEmpty {
@@ -93,9 +105,18 @@ struct RunningModelsView: View {
         }
     }
 
+    private var modelActionButtonTitle: String {
+        if isWarming { return "Warming..." }
+        if isUnloading { return "Unloading..." }
+        return "Warm Again"
+    }
+
     private func warmSelected() async {
-        guard let name = selectedModel?.name else { return }
-        status = await monitor.warm(model: name, keepAlive: keepAlive, numCtx: numCtx, options: generationOptions)
+        guard let name = selectedModel?.name, !isModelActionRunning else { return }
+        isWarming = true
+        let message = await monitor.warm(model: name, keepAlive: keepAlive, numCtx: numCtx, options: generationOptions)
+        status = message.hasPrefix("Warmed") ? "Warmed \(name) with keep_alive \(keepAlive)." : message
+        isWarming = false
     }
 
     private func unloadSelected() async {
@@ -104,10 +125,33 @@ struct RunningModelsView: View {
     }
 
     private func unload(modelName: String) async {
-        status = await monitor.unload(model: modelName)
+        guard !isModelActionRunning else { return }
+        isUnloading = true
+        let message = await monitor.unload(model: modelName)
+        status = message
+        if message.hasPrefix("Unloaded") || message.hasPrefix("Stopped") {
+            await waitForRunningModelToDisappear(named: modelName)
+        }
+        isUnloading = false
+    }
+
+    private func waitForRunningModelToDisappear(named modelName: String) async {
+        let deadline = Date().addingTimeInterval(10)
+        while Date() < deadline {
+            if ModelLifecycleTransitionPolicy.runningModelIsAbsent(
+                modelName: modelName,
+                runningModels: monitor.runningModels,
+                now: Date()
+            ) {
+                return
+            }
+            try? await Task.sleep(nanoseconds: 500_000_000)
+            await monitor.refreshAll()
+        }
     }
 
     private func applyProfile() async {
+        guard !isModelActionRunning else { return }
         guard let id = selectedProfileID, let profile = profiles.profiles.first(where: { $0.id == id }) else { return }
         let currentModel = selectedModel?.name ?? ""
         let targetModel = profile.resolvedModel(currentModel: currentModel)

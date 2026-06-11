@@ -185,8 +185,88 @@ enum ModelStatusPolicy {
 }
 
 enum InstalledModelActionPolicy {
-    static func canWarmSelected(status: ModelLoadStatus?, isWarming: Bool) -> Bool {
-        status == .idle && !isWarming
+    static func canWarmSelected(status: ModelLoadStatus?, isWarming: Bool, isUnloading: Bool = false) -> Bool {
+        status == .idle && !isWarming && !isUnloading
+    }
+
+    static func canUnloadSelected(isWarm: Bool, isWarming: Bool, isUnloading: Bool) -> Bool {
+        isWarm && !isWarming && !isUnloading
+    }
+
+    static func canUseSelectionActions(hasSelection: Bool, isWarming: Bool, isUnloading: Bool) -> Bool {
+        hasSelection && !isWarming && !isUnloading
+    }
+}
+
+enum ModelLifecycleTransitionPolicy {
+    static func installedModelStatus(
+        modelName: String,
+        installedModels: [InstalledModel],
+        runningModels: [RunningModel],
+        activeModelNames: Set<String>,
+        now: Date
+    ) -> ModelLoadStatus? {
+        guard let model = installedModels.first(where: { $0.name == modelName }) else { return nil }
+        return ModelStatusPolicy.status(
+            for: model,
+            runningModels: runningModels,
+            activeModelNames: activeModelNames,
+            now: now
+        )
+    }
+
+    static func installedModelReached(
+        modelName: String,
+        targetStatus: ModelLoadStatus,
+        installedModels: [InstalledModel],
+        runningModels: [RunningModel],
+        activeModelNames: Set<String>,
+        now: Date
+    ) -> Bool {
+        installedModelStatus(
+            modelName: modelName,
+            installedModels: installedModels,
+            runningModels: runningModels,
+            activeModelNames: activeModelNames,
+            now: now
+        ) == targetStatus
+    }
+
+    static func runningModelIsAbsent(modelName: String, runningModels: [RunningModel], now: Date) -> Bool {
+        runningModels.allSatisfy { runningModel in
+            guard namesMatch(runningModel.name, modelName) else { return true }
+            guard let expiresAt = runningModel.expiresAt else { return false }
+            return expiresAt <= now
+        }
+    }
+
+    private static func namesMatch(_ lhs: String, _ rhs: String) -> Bool {
+        normalizedName(lhs) == normalizedName(rhs)
+    }
+
+    private static func normalizedName(_ name: String) -> String {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.hasSuffix(":latest") ? String(trimmed.dropLast(":latest".count)) : trimmed
+    }
+}
+
+enum PreferredModelSelectionPolicy {
+    static func selectedInstalledModelID(for profile: RuntimeProfile?, installedModels: [InstalledModel]) -> InstalledModel.ID? {
+        guard let preferredModel = profile?.preferredModel.trimmingCharacters(in: .whitespacesAndNewlines),
+              !preferredModel.isEmpty
+        else {
+            return nil
+        }
+        return installedModels.first { namesMatch($0.name, preferredModel) }?.id
+    }
+
+    private static func namesMatch(_ lhs: String, _ rhs: String) -> Bool {
+        normalizedName(lhs) == normalizedName(rhs)
+    }
+
+    private static func normalizedName(_ name: String) -> String {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.hasSuffix(":latest") ? String(trimmed.dropLast(":latest".count)) : trimmed
     }
 }
 
@@ -221,6 +301,7 @@ struct InstalledModelsView: View {
     @State private var detailError = ""
     @State private var warmStatus = ""
     @State private var isWarming = false
+    @State private var isUnloading = false
     @State private var keepAlive = "30m"
     @State private var pendingUnload = PendingUnloadConfirmation()
     @State private var profileUsage = ModelProfileUsage()
@@ -265,6 +346,10 @@ struct InstalledModelsView: View {
         selectedModelStatus == .warm || selectedModelStatus == .busy
     }
 
+    private var isModelActionRunning: Bool {
+        isWarming || isUnloading
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
@@ -274,14 +359,20 @@ struct InstalledModelsView: View {
             HStack(spacing: 8) {
                 TextField("Filter models", text: $searchText)
                     .textFieldStyle(.roundedBorder)
+                    .disabled(isModelActionRunning)
                 Picker("Sort", selection: $sort) {
                     ForEach(InstalledModelSort.allCases) { Text($0.rawValue).tag($0) }
                 }
                 .frame(width: 120)
+                .disabled(isModelActionRunning)
                 Button(detailsButtonTitle) {
                     Task { await toggleDetail() }
                 }
-                .disabled(selectedModel == nil)
+                .disabled(!InstalledModelActionPolicy.canUseSelectionActions(
+                    hasSelection: selectedModel != nil,
+                    isWarming: isWarming,
+                    isUnloading: isUnloading
+                ))
             }
             VStack(alignment: .leading, spacing: 6) {
                 HStack(spacing: 8) {
@@ -292,6 +383,7 @@ struct InstalledModelsView: View {
                     }
                     .labelsHidden()
                     .frame(width: 175)
+                    .disabled(isModelActionRunning)
 
                     Text("Keep alive")
                     Picker("Keep alive", selection: $keepAlive) {
@@ -299,6 +391,7 @@ struct InstalledModelsView: View {
                     }
                     .labelsHidden()
                     .frame(width: 82)
+                    .disabled(isModelActionRunning)
 
                     if !warmStatus.isEmpty {
                         Text(warmStatus)
@@ -312,10 +405,14 @@ struct InstalledModelsView: View {
                 }
 
                 HStack(spacing: 8) {
-                    Button(isWarming ? "Warming..." : "Warm Up Selected") {
+                    Button(modelActionButtonTitle) {
                         Task { await warmSelected() }
                     }
-                    .disabled(!InstalledModelActionPolicy.canWarmSelected(status: selectedModelStatus, isWarming: isWarming))
+                    .disabled(!InstalledModelActionPolicy.canWarmSelected(
+                        status: selectedModelStatus,
+                        isWarming: isWarming,
+                        isUnloading: isUnloading
+                    ))
                     Button("Unload Selected") {
                         if settings.confirmUnload {
                             pendingUnload.begin(forModelName: selectedModel?.name)
@@ -323,14 +420,18 @@ struct InstalledModelsView: View {
                             Task { await unloadSelected() }
                         }
                     }
-                    .disabled(!selectedModelIsWarm)
+                    .disabled(!InstalledModelActionPolicy.canUnloadSelected(
+                        isWarm: selectedModelIsWarm,
+                        isWarming: isWarming,
+                        isUnloading: isUnloading
+                    ))
                     Button("Copy Model Name") {
                         if let name = selectedModel?.name {
                             NSPasteboard.general.clearContents()
                             NSPasteboard.general.setString(name, forType: .string)
                         }
                     }
-                    .disabled(selectedModel == nil)
+                    .disabled(selectedModel == nil || isModelActionRunning)
                     Spacer()
                 }
             }
@@ -345,9 +446,11 @@ struct InstalledModelsView: View {
                             Task { await unload(modelName: name) }
                         }
                     }
+                    .disabled(isModelActionRunning)
                     Button("Cancel") {
                         pendingUnload.cancel()
                     }
+                    .disabled(isModelActionRunning)
                 }
             }
             if filteredModels.isEmpty {
@@ -386,9 +489,11 @@ struct InstalledModelsView: View {
                             }
                             .contentShape(Rectangle())
                             .onTapGesture {
+                                guard !isModelActionRunning else { return }
                                 selectedModelID = model.id
                             }
                             .simultaneousGesture(TapGesture(count: 2).onEnded {
+                                guard !isModelActionRunning else { return }
                                 Task { await toggleDetail(for: model) }
                             })
                             Divider()
@@ -399,6 +504,7 @@ struct InstalledModelsView: View {
                     .padding(.vertical, 6)
                 }
                 .background(.quaternary.opacity(0.35), in: RoundedRectangle(cornerRadius: 6))
+                .disabled(isModelActionRunning)
                 .frame(
                     minHeight: detailSummary == nil ? 230 : 150,
                     maxHeight: detailSummary == nil ? 340 : 190
@@ -427,6 +533,15 @@ struct InstalledModelsView: View {
             detailError = ""
             pendingUnload.cancel()
         }
+        .onChange(of: selectedProfileID) { _ in
+            guard !isModelActionRunning else { return }
+            if let preferredModelID = PreferredModelSelectionPolicy.selectedInstalledModelID(
+                for: selectedProfile,
+                installedModels: monitor.installedModels
+            ) {
+                selectedModelID = preferredModelID
+            }
+        }
         .onReceive(warmCountdownTimer) { tick in
             now = tick
         }
@@ -438,6 +553,12 @@ struct InstalledModelsView: View {
 
     private var detailsButtonTitle: String {
         isShowingDetailForSelection ? "Hide Details" : "Details"
+    }
+
+    private var modelActionButtonTitle: String {
+        if isWarming { return "Warming..." }
+        if isUnloading { return "Unloading..." }
+        return "Warm Up Selected"
     }
 
     private func toggleDetail() async {
@@ -479,9 +600,8 @@ struct InstalledModelsView: View {
     }
 
     private func warmSelected() async {
-        guard let selectedModel else { return }
+        guard let selectedModel, !isModelActionRunning else { return }
         isWarming = true
-        defer { isWarming = false }
 
         let modelMaxContext = selectedProfile == nil ? nil : await loadModelMaxContext(model: selectedModel.name)
         let request = ModelWarmRequest.resolve(
@@ -498,10 +618,12 @@ struct InstalledModelsView: View {
         )
         if message.hasPrefix("Warmed") {
             profileUsage.record(profile: selectedProfile, fallbackModel: selectedModel.name)
-            warmStatus = "\(message) \(request.statusDetail)"
+            warmStatus = "Warmed \(request.model) with \(request.statusDetail)"
+            await waitForInstalledModel(named: request.model, toBecome: .warm)
         } else {
             warmStatus = message
         }
+        isWarming = false
     }
 
     private func unloadSelected() async {
@@ -510,7 +632,34 @@ struct InstalledModelsView: View {
     }
 
     private func unload(modelName: String) async {
-        warmStatus = await monitor.unload(model: modelName)
+        guard !isModelActionRunning else { return }
+        isUnloading = true
+        let message = await monitor.unload(model: modelName)
+        warmStatus = message
+        if message.hasPrefix("Unloaded") || message.hasPrefix("Stopped") {
+            await waitForInstalledModel(named: modelName, toBecome: .idle)
+        }
+        isUnloading = false
+    }
+
+    private func waitForInstalledModel(named modelName: String, toBecome targetStatus: ModelLoadStatus) async {
+        let deadline = Date().addingTimeInterval(10)
+        while Date() < deadline {
+            let snapshotTime = Date()
+            now = snapshotTime
+            if ModelLifecycleTransitionPolicy.installedModelReached(
+                modelName: modelName,
+                targetStatus: targetStatus,
+                installedModels: monitor.installedModels,
+                runningModels: monitor.runningModels,
+                activeModelNames: proxy.activeModelNames,
+                now: snapshotTime
+            ) {
+                return
+            }
+            try? await Task.sleep(nanoseconds: 500_000_000)
+            await monitor.refreshAll()
+        }
     }
 
     private func loadModelMaxContext(model: String) async -> Int? {

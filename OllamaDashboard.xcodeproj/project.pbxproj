@@ -9,19 +9,21 @@
 /* Begin PBXBuildFile section */
 		010000000000000000000001 /* OllamaDashboardApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000001 /* OllamaDashboardApp.swift */; };
 		010000000000000000000002 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000002 /* AppState.swift */; };
+		01000000000000000000001A /* DashboardRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02000000000000000000001A /* DashboardRuntime.swift */; };
 		010000000000000000000003 /* OllamaModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000003 /* OllamaModels.swift */; };
 		010000000000000000000004 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000004 /* AppSettings.swift */; };
 		010000000000000000000005 /* RuntimeProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000005 /* RuntimeProfile.swift */; };
 		010000000000000000000006 /* OllamaAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000006 /* OllamaAPIClient.swift */; };
 		010000000000000000000007 /* OllamaCLIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000007 /* OllamaCLIClient.swift */; };
 		010000000000000000000008 /* OllamaServiceMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000008 /* OllamaServiceMonitor.swift */; };
+		01000000000000000000001C /* SystemResourceMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02000000000000000000001C /* SystemResourceMonitor.swift */; };
 		010000000000000000000009 /* BenchmarkService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000009 /* BenchmarkService.swift */; };
 		01000000000000000000000A /* ProfileManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02000000000000000000000A /* ProfileManager.swift */; };
 		01000000000000000000000B /* ByteFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02000000000000000000000B /* ByteFormatter.swift */; };
 		01000000000000000000000C /* DurationFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02000000000000000000000C /* DurationFormatter.swift */; };
 		01000000000000000000000D /* ModelNameValidator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02000000000000000000000D /* ModelNameValidator.swift */; };
 		01000000000000000000000E /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02000000000000000000000E /* Logger.swift */; };
-		01000000000000000000000F /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02000000000000000000000F /* MenuBarView.swift */; };
+		01000000000000000000000F /* DashboardWindowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02000000000000000000000F /* DashboardWindowView.swift */; };
 		010000000000000000000010 /* CommonViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000010 /* CommonViews.swift */; };
 		010000000000000000000011 /* ServiceStatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000011 /* ServiceStatusView.swift */; };
 		010000000000000000000012 /* InstalledModelsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000012 /* InstalledModelsView.swift */; };
@@ -31,6 +33,7 @@
 		010000000000000000000016 /* ProfilesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000016 /* ProfilesView.swift */; };
 		010000000000000000000017 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000017 /* SettingsView.swift */; };
 		010000000000000000000018 /* AdvancedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000018 /* AdvancedView.swift */; };
+		01000000000000000000001B /* StatusMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02000000000000000000001B /* StatusMenuView.swift */; };
 		010000000000000000000019 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000019 /* Assets.xcassets */; };
 		010000000000000000000101 /* ModelParsingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000101 /* ModelParsingTests.swift */; };
 		010000000000000000000102 /* OllamaAPIClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000102 /* OllamaAPIClientTests.swift */; };
@@ -58,19 +61,21 @@
 /* Begin PBXFileReference section */
 		020000000000000000000001 /* OllamaDashboardApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/OllamaDashboardApp.swift; sourceTree = "<group>"; };
 		020000000000000000000002 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/AppState.swift; sourceTree = "<group>"; };
+		02000000000000000000001A /* DashboardRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/DashboardRuntime.swift; sourceTree = "<group>"; };
 		020000000000000000000003 /* OllamaModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/OllamaModels.swift; sourceTree = "<group>"; };
 		020000000000000000000004 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/AppSettings.swift; sourceTree = "<group>"; };
 		020000000000000000000005 /* RuntimeProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/RuntimeProfile.swift; sourceTree = "<group>"; };
 		020000000000000000000006 /* OllamaAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/OllamaAPIClient.swift; sourceTree = "<group>"; };
 		020000000000000000000007 /* OllamaCLIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/OllamaCLIClient.swift; sourceTree = "<group>"; };
 		020000000000000000000008 /* OllamaServiceMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/OllamaServiceMonitor.swift; sourceTree = "<group>"; };
+		02000000000000000000001C /* SystemResourceMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/SystemResourceMonitor.swift; sourceTree = "<group>"; };
 		020000000000000000000009 /* BenchmarkService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/BenchmarkService.swift; sourceTree = "<group>"; };
 		02000000000000000000000A /* ProfileManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/ProfileManager.swift; sourceTree = "<group>"; };
 		02000000000000000000000B /* ByteFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utilities/ByteFormatter.swift; sourceTree = "<group>"; };
 		02000000000000000000000C /* DurationFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utilities/DurationFormatter.swift; sourceTree = "<group>"; };
 		02000000000000000000000D /* ModelNameValidator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utilities/ModelNameValidator.swift; sourceTree = "<group>"; };
 		02000000000000000000000E /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utilities/Logger.swift; sourceTree = "<group>"; };
-		02000000000000000000000F /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/MenuBarView.swift; sourceTree = "<group>"; };
+		02000000000000000000000F /* DashboardWindowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/DashboardWindowView.swift; sourceTree = "<group>"; };
 		020000000000000000000010 /* CommonViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/CommonViews.swift; sourceTree = "<group>"; };
 		020000000000000000000011 /* ServiceStatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/ServiceStatusView.swift; sourceTree = "<group>"; };
 		020000000000000000000012 /* InstalledModelsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/InstalledModelsView.swift; sourceTree = "<group>"; };
@@ -80,6 +85,7 @@
 		020000000000000000000016 /* ProfilesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/ProfilesView.swift; sourceTree = "<group>"; };
 		020000000000000000000017 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/SettingsView.swift; sourceTree = "<group>"; };
 		020000000000000000000018 /* AdvancedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/AdvancedView.swift; sourceTree = "<group>"; };
+		02000000000000000000001B /* StatusMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/StatusMenuView.swift; sourceTree = "<group>"; };
 		020000000000000000000019 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		020000000000000000000101 /* ModelParsingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelParsingTests.swift; sourceTree = "<group>"; };
 		020000000000000000000102 /* OllamaAPIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OllamaAPIClientTests.swift; sourceTree = "<group>"; };
@@ -116,19 +122,21 @@
 			children = (
 				020000000000000000000001 /* OllamaDashboardApp.swift */,
 				020000000000000000000002 /* AppState.swift */,
+				02000000000000000000001A /* DashboardRuntime.swift */,
 				020000000000000000000003 /* OllamaModels.swift */,
 				020000000000000000000004 /* AppSettings.swift */,
 				020000000000000000000005 /* RuntimeProfile.swift */,
 				020000000000000000000006 /* OllamaAPIClient.swift */,
 				020000000000000000000007 /* OllamaCLIClient.swift */,
 				020000000000000000000008 /* OllamaServiceMonitor.swift */,
+				02000000000000000000001C /* SystemResourceMonitor.swift */,
 				020000000000000000000009 /* BenchmarkService.swift */,
 				02000000000000000000000A /* ProfileManager.swift */,
 				02000000000000000000000B /* ByteFormatter.swift */,
 				02000000000000000000000C /* DurationFormatter.swift */,
 				02000000000000000000000D /* ModelNameValidator.swift */,
 				02000000000000000000000E /* Logger.swift */,
-				02000000000000000000000F /* MenuBarView.swift */,
+				02000000000000000000000F /* DashboardWindowView.swift */,
 				020000000000000000000010 /* CommonViews.swift */,
 				020000000000000000000011 /* ServiceStatusView.swift */,
 				020000000000000000000012 /* InstalledModelsView.swift */,
@@ -138,6 +146,7 @@
 				020000000000000000000016 /* ProfilesView.swift */,
 				020000000000000000000017 /* SettingsView.swift */,
 				020000000000000000000018 /* AdvancedView.swift */,
+				02000000000000000000001B /* StatusMenuView.swift */,
 				020000000000000000000019 /* Assets.xcassets */,
 			);
 			path = OllamaDashboard;
@@ -264,19 +273,21 @@
 			files = (
 				010000000000000000000001 /* OllamaDashboardApp.swift in Sources */,
 				010000000000000000000002 /* AppState.swift in Sources */,
+				01000000000000000000001A /* DashboardRuntime.swift in Sources */,
 				010000000000000000000003 /* OllamaModels.swift in Sources */,
 				010000000000000000000004 /* AppSettings.swift in Sources */,
 				010000000000000000000005 /* RuntimeProfile.swift in Sources */,
 				010000000000000000000006 /* OllamaAPIClient.swift in Sources */,
 				010000000000000000000007 /* OllamaCLIClient.swift in Sources */,
 				010000000000000000000008 /* OllamaServiceMonitor.swift in Sources */,
+				01000000000000000000001C /* SystemResourceMonitor.swift in Sources */,
 				010000000000000000000009 /* BenchmarkService.swift in Sources */,
 				01000000000000000000000A /* ProfileManager.swift in Sources */,
 				01000000000000000000000B /* ByteFormatter.swift in Sources */,
 				01000000000000000000000C /* DurationFormatter.swift in Sources */,
 				01000000000000000000000D /* ModelNameValidator.swift in Sources */,
 				01000000000000000000000E /* Logger.swift in Sources */,
-				01000000000000000000000F /* MenuBarView.swift in Sources */,
+				01000000000000000000000F /* DashboardWindowView.swift in Sources */,
 				010000000000000000000010 /* CommonViews.swift in Sources */,
 				010000000000000000000011 /* ServiceStatusView.swift in Sources */,
 				010000000000000000000012 /* InstalledModelsView.swift in Sources */,
@@ -286,6 +297,7 @@
 				010000000000000000000016 /* ProfilesView.swift in Sources */,
 				010000000000000000000017 /* SettingsView.swift in Sources */,
 				010000000000000000000018 /* AdvancedView.swift in Sources */,
+				01000000000000000000001B /* StatusMenuView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -368,7 +380,6 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = OllamaDashboard;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
-				INFOPLIST_KEY_LSUIElement = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.local.OllamaDashboard;
@@ -387,7 +398,6 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = OllamaDashboard;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
-				INFOPLIST_KEY_LSUIElement = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.local.OllamaDashboard;

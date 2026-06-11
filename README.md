@@ -1,6 +1,6 @@
 # OllamaDashboard
 
-OllamaDashboard is a local macOS SwiftUI menu bar control panel for an existing Ollama service. It attaches to the public Ollama HTTP API at `http://localhost:11434` by default and keeps optional CLI-backed controls explicit and opt-in.
+OllamaDashboard is a local macOS SwiftUI utility app with a lightweight menu bar companion for an existing Ollama service. It attaches to the public Ollama HTTP API at `http://localhost:11434` by default and keeps optional CLI-backed controls explicit and opt-in.
 
 The app is designed as a lightweight local systems dashboard for:
 
@@ -13,6 +13,8 @@ The app is designed as a lightweight local systems dashboard for:
 - simple benchmark timing
 - bounded read-only logs and optional service configuration notes
 - optional localhost proxy for tracking active external Ollama requests
+
+The main window opens on launch and is the primary workspace. Closing the window leaves the app running so the menu bar companion, proxy, and background refresh can continue; use Quit from the app menu or menu bar companion to stop it.
 
 ## Run
 

@@ -51,6 +51,52 @@ struct SettingsView: View {
                     .textFieldStyle(.roundedBorder)
                     .frame(width: 120, alignment: .leading)
                 }
+                GridRow {
+                    Spacer()
+                    Toggle("Enable prompt guardrails", isOn: $settings.enablePromptGuardrails)
+                }
+                GridRow {
+                    Text("Guardrail response")
+                    Picker("Guardrail response", selection: $settings.promptGuardrailResponseMode) {
+                        ForEach(PromptGuardrailResponseMode.allCases) { mode in
+                            Text(mode.label).tag(mode)
+                        }
+                    }
+                    .labelsHidden()
+                    .frame(width: 190, alignment: .leading)
+                }
+                GridRow {
+                    Text("Warn prompt chars")
+                    thresholdField(value: $settings.promptGuardrailWarnPromptCharacters)
+                }
+                GridRow {
+                    Text("Block prompt chars")
+                    thresholdField(value: $settings.promptGuardrailBlockPromptCharacters)
+                }
+                GridRow {
+                    Text("Warn body bytes")
+                    thresholdField(value: $settings.promptGuardrailWarnBodyBytes)
+                }
+                GridRow {
+                    Text("Block body bytes")
+                    thresholdField(value: $settings.promptGuardrailBlockBodyBytes)
+                }
+                GridRow {
+                    Text("Warn messages")
+                    thresholdField(value: $settings.promptGuardrailWarnMessages)
+                }
+                GridRow {
+                    Text("Block messages")
+                    thresholdField(value: $settings.promptGuardrailBlockMessages)
+                }
+                GridRow {
+                    Text("Warn context ratio")
+                    ratioField(value: $settings.promptGuardrailWarnContextRatio)
+                }
+                GridRow {
+                    Text("Block context ratio")
+                    ratioField(value: $settings.promptGuardrailBlockContextRatio)
+                }
             }
             Toggle("Show advanced service configuration notes", isOn: $settings.showAdvancedServiceNotes)
             Toggle("Confirm before unloading models", isOn: $settings.confirmUnload)
@@ -69,5 +115,17 @@ struct SettingsView: View {
         } else {
             detectionStatus = "ollama CLI not found."
         }
+    }
+
+    private func thresholdField(value: Binding<Int>) -> some View {
+        TextField("Threshold", value: value, format: .number.grouping(.never))
+            .textFieldStyle(.roundedBorder)
+            .frame(width: 140, alignment: .leading)
+    }
+
+    private func ratioField(value: Binding<Double>) -> some View {
+        TextField("Ratio", value: value, format: .number.precision(.fractionLength(2)))
+            .textFieldStyle(.roundedBorder)
+            .frame(width: 100, alignment: .leading)
     }
 }

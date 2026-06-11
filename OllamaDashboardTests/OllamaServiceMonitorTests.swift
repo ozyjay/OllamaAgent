@@ -73,7 +73,7 @@ final class OllamaServiceMonitorTests: XCTestCase {
             options: ["temperature": .number(0.2)]
         )
 
-        XCTAssertEqual(message, "Warmed qwen2.5-coder:7b with keep_alive 1h.")
+        XCTAssertEqual(message, "Warmed qwen2.5-coder:7b.")
         XCTAssertEqual(warmed?.0, "qwen2.5-coder:7b")
         XCTAssertEqual(warmed?.1, "1h")
         XCTAssertEqual(warmed?.2, 8192)
@@ -183,4 +183,3 @@ final class OllamaServiceMonitorTests: XCTestCase {
         return settings
     }
 }
-
