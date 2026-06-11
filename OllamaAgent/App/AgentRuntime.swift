@@ -6,6 +6,7 @@ final class AgentRuntime: ObservableObject {
     let settings: AppSettings
     let profiles: ProfileManager
     let proxy: OllamaProxyServer
+    let controlServer: AgentControlServer
     let monitor: OllamaServiceMonitor
     let navigation = AgentNavigation()
 
@@ -15,16 +16,19 @@ final class AgentRuntime: ObservableObject {
     init(
         settings: AppSettings = AppSettings(),
         profiles: ProfileManager = ProfileManager(),
-        proxy: OllamaProxyServer = OllamaProxyServer()
+        proxy: OllamaProxyServer = OllamaProxyServer(),
+        controlServer: AgentControlServer = AgentControlServer()
     ) {
         self.settings = settings
         self.profiles = profiles
         self.proxy = proxy
+        self.controlServer = controlServer
         monitor = OllamaServiceMonitor(settings: settings)
         configureBindings()
         configureAutoRefresh()
         refreshNow()
         applyProxySettings()
+        controlServer.start(runtime: self)
     }
 
     deinit {

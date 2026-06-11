@@ -37,6 +37,7 @@ final class AgentControlAPITests: XCTestCase {
 
         XCTAssertEqual(events.map(\.type), ["started", "stopped"])
         XCTAssertEqual(events.last?.reason, "context_limit")
-        XCTAssertFalse(events.last?.message.contains("this prompt is too long") ?? true)
+        let message = try XCTUnwrap(events.last?.message)
+        XCTAssertFalse(message.contains("this prompt is too long"))
     }
 }

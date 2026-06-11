@@ -24,6 +24,8 @@
 		01000000000000000000001E /* PromptGuardrails.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02000000000000000000001E /* PromptGuardrails.swift */; };
 		01000000000000000000001F /* OllamaProxyServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02000000000000000000001F /* OllamaProxyServer.swift */; };
 		010000000000000000000020 /* OllamaProxyHTTP.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000020 /* OllamaProxyHTTP.swift */; };
+		010000000000000000000028 /* AgentControlAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000028 /* AgentControlAPI.swift */; };
+		010000000000000000000029 /* AgentControlServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000029 /* AgentControlServer.swift */; };
 		010000000000000000000009 /* BenchmarkService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000009 /* BenchmarkService.swift */; };
 		01000000000000000000000A /* ProfileManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02000000000000000000000A /* ProfileManager.swift */; };
 		01000000000000000000000B /* ByteFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02000000000000000000000B /* ByteFormatter.swift */; };
@@ -60,6 +62,7 @@
 		01000000000000000000010C /* InstalledModelPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02000000000000000000010C /* InstalledModelPolicyTests.swift */; };
 		01000000000000000000010D /* PromptGuardrailTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02000000000000000000010D /* PromptGuardrailTests.swift */; };
 		01000000000000000000010E /* OllamaProxyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02000000000000000000010E /* OllamaProxyTests.swift */; };
+		01000000000000000000010F /* AgentControlAPITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02000000000000000000010F /* AgentControlAPITests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -90,6 +93,8 @@
 		02000000000000000000001E /* PromptGuardrails.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/Proxy/PromptGuardrails.swift; sourceTree = "<group>"; };
 		02000000000000000000001F /* OllamaProxyServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/Proxy/OllamaProxyServer.swift; sourceTree = "<group>"; };
 		020000000000000000000020 /* OllamaProxyHTTP.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/Proxy/OllamaProxyHTTP.swift; sourceTree = "<group>"; };
+		020000000000000000000028 /* AgentControlAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/Control/AgentControlAPI.swift; sourceTree = "<group>"; };
+		020000000000000000000029 /* AgentControlServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/Control/AgentControlServer.swift; sourceTree = "<group>"; };
 		020000000000000000000009 /* BenchmarkService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/BenchmarkService.swift; sourceTree = "<group>"; };
 		02000000000000000000000A /* ProfileManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/ProfileManager.swift; sourceTree = "<group>"; };
 		02000000000000000000000B /* ByteFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utilities/ByteFormatter.swift; sourceTree = "<group>"; };
@@ -126,6 +131,7 @@
 		02000000000000000000010C /* InstalledModelPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstalledModelPolicyTests.swift; sourceTree = "<group>"; };
 		02000000000000000000010D /* PromptGuardrailTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromptGuardrailTests.swift; sourceTree = "<group>"; };
 		02000000000000000000010E /* OllamaProxyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OllamaProxyTests.swift; sourceTree = "<group>"; };
+		02000000000000000000010F /* AgentControlAPITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentControlAPITests.swift; sourceTree = "<group>"; };
 		040000000000000000000001 /* OllamaAgent.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OllamaAgent.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		040000000000000000000002 /* OllamaAgentTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = OllamaAgentTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -165,6 +171,8 @@
 				02000000000000000000001E /* PromptGuardrails.swift */,
 				02000000000000000000001F /* OllamaProxyServer.swift */,
 				020000000000000000000020 /* OllamaProxyHTTP.swift */,
+				020000000000000000000028 /* AgentControlAPI.swift */,
+				020000000000000000000029 /* AgentControlServer.swift */,
 				020000000000000000000009 /* BenchmarkService.swift */,
 				02000000000000000000000A /* ProfileManager.swift */,
 				02000000000000000000000B /* ByteFormatter.swift */,
@@ -203,6 +211,7 @@
 					02000000000000000000010C /* InstalledModelPolicyTests.swift */,
 					02000000000000000000010D /* PromptGuardrailTests.swift */,
 					02000000000000000000010E /* OllamaProxyTests.swift */,
+					02000000000000000000010F /* AgentControlAPITests.swift */,
 					020000000000000000000107 /* TestDoubles.swift */,
 				020000000000000000000103 /* Fixtures.swift */,
 				020000000000000000000104 /* tags.json */,
@@ -330,6 +339,8 @@
 				01000000000000000000001E /* PromptGuardrails.swift in Sources */,
 				01000000000000000000001F /* OllamaProxyServer.swift in Sources */,
 				010000000000000000000020 /* OllamaProxyHTTP.swift in Sources */,
+				010000000000000000000028 /* AgentControlAPI.swift in Sources */,
+				010000000000000000000029 /* AgentControlServer.swift in Sources */,
 				010000000000000000000009 /* BenchmarkService.swift in Sources */,
 				01000000000000000000000A /* ProfileManager.swift in Sources */,
 				01000000000000000000000B /* ByteFormatter.swift in Sources */,
@@ -367,6 +378,7 @@
 					01000000000000000000010C /* InstalledModelPolicyTests.swift in Sources */,
 					01000000000000000000010D /* PromptGuardrailTests.swift in Sources */,
 					01000000000000000000010E /* OllamaProxyTests.swift in Sources */,
+					01000000000000000000010F /* AgentControlAPITests.swift in Sources */,
 					010000000000000000000107 /* TestDoubles.swift in Sources */,
 				010000000000000000000103 /* Fixtures.swift in Sources */,
 			);
