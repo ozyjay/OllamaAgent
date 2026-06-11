@@ -57,7 +57,7 @@ To install somewhere else, pass a destination folder:
 
 - Logs: reachable/offline state, version, base URL, last refresh, local URL/docs buttons, proxy status, logs, and optional service configuration notes.
 - Profiles: editable built-in presets with fallback context policies and exact per-model context overrides.
-- Models: installed model search/sort/details, Idle/Warm/Busy status with remaining keep-alive time, last warm-up profile used, warm up for any installed model, copy model name, and unload warm models with confirmation.
+- Models: installed model search/sort/details, Cold/Warm/Busy status with remaining keep-alive time, last warm-up profile used, warm up for any installed model, copy model name, and unload warm models with confirmation.
 - Settings: base URL, refresh interval, CLI enablement, CLI path, local proxy, diagnostics notes, and confirmations.
 
 ## MVP Limits

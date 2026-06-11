@@ -137,13 +137,13 @@ final class InstalledModelPolicyTests: XCTestCase {
         XCTAssertEqual(
             ModelStatusPolicy.statusRows(installedModels: installed, runningModels: running, now: now),
             [
-                ModelStatusRow(modelName: "llama3.2:latest", status: .idle, timeRemaining: nil),
+                ModelStatusRow(modelName: "llama3.2:latest", status: .cold, timeRemaining: nil),
                 ModelStatusRow(modelName: "qwen2.5-coder:7b", status: .warm, timeRemaining: "2m 5s")
             ]
         )
     }
 
-    func testModelStatusPolicyTreatsExpiredRunningModelsAsIdle() {
+    func testModelStatusPolicyTreatsExpiredRunningModelsAsCold() {
         let now = Date(timeIntervalSince1970: 1_000)
         let installed = [makeInstalledModel(name: "llama3.2:latest")]
         let running = [makeRunningModel(name: "llama3.2:latest", expiresAt: now.addingTimeInterval(-1))]
@@ -151,18 +151,19 @@ final class InstalledModelPolicyTests: XCTestCase {
         XCTAssertEqual(
             ModelStatusPolicy.statusRows(installedModels: installed, runningModels: running, now: now),
             [
-                ModelStatusRow(modelName: "llama3.2:latest", status: .idle, timeRemaining: nil)
+                ModelStatusRow(modelName: "llama3.2:latest", status: .cold, timeRemaining: nil)
             ]
         )
+        XCTAssertEqual(ModelLoadStatus.cold.rawValue, "Cold")
     }
 
     func testInstalledModelActionPolicyDisablesWarmWhenModelIsAlreadyLoaded() {
         XCTAssertFalse(InstalledModelActionPolicy.canWarmSelected(status: nil, isWarming: false))
         XCTAssertFalse(InstalledModelActionPolicy.canWarmSelected(status: .warm, isWarming: false))
         XCTAssertFalse(InstalledModelActionPolicy.canWarmSelected(status: .busy, isWarming: false))
-        XCTAssertFalse(InstalledModelActionPolicy.canWarmSelected(status: .idle, isWarming: true))
-        XCTAssertFalse(InstalledModelActionPolicy.canWarmSelected(status: .idle, isWarming: false, isUnloading: true))
-        XCTAssertTrue(InstalledModelActionPolicy.canWarmSelected(status: .idle, isWarming: false))
+        XCTAssertFalse(InstalledModelActionPolicy.canWarmSelected(status: .cold, isWarming: true))
+        XCTAssertFalse(InstalledModelActionPolicy.canWarmSelected(status: .cold, isWarming: false, isUnloading: true))
+        XCTAssertTrue(InstalledModelActionPolicy.canWarmSelected(status: .cold, isWarming: false))
 
         XCTAssertFalse(InstalledModelActionPolicy.canUnloadSelected(isWarm: false, isWarming: false, isUnloading: false))
         XCTAssertFalse(InstalledModelActionPolicy.canUnloadSelected(isWarm: true, isWarming: true, isUnloading: false))
@@ -191,7 +192,7 @@ final class InstalledModelPolicyTests: XCTestCase {
         ))
         XCTAssertFalse(ModelLifecycleTransitionPolicy.installedModelReached(
             modelName: "llama3.2:latest",
-            targetStatus: .idle,
+            targetStatus: .cold,
             installedModels: installed,
             runningModels: warmRunning,
             activeModelNames: [],
@@ -199,7 +200,7 @@ final class InstalledModelPolicyTests: XCTestCase {
         ))
         XCTAssertTrue(ModelLifecycleTransitionPolicy.installedModelReached(
             modelName: "llama3.2:latest",
-            targetStatus: .idle,
+            targetStatus: .cold,
             installedModels: installed,
             runningModels: expiredRunning,
             activeModelNames: [],

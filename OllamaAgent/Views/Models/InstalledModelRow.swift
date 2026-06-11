@@ -36,7 +36,7 @@ struct InstalledModelRow: View {
                 VStack(alignment: .trailing, spacing: 1) {
                     Text(status.rawValue)
                         .font(.caption.weight(.semibold))
-                        .foregroundStyle(status == .idle ? (isSelected ? .white.opacity(0.9) : .secondary) : (isSelected ? .white : .green))
+                        .foregroundStyle(status == .cold ? (isSelected ? .white.opacity(0.9) : .secondary) : (isSelected ? .white : .green))
                         .lineLimit(1)
                     Text(timeRemaining ?? "")
                         .font(.caption2)

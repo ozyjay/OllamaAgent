@@ -359,7 +359,7 @@ struct InstalledModelsView: View {
         let message = await monitor.unload(model: modelName)
         warmStatus = message
         if message.hasPrefix("Unloaded") || message.hasPrefix("Stopped") {
-            await waitForInstalledModel(named: modelName, toBecome: .idle)
+            await waitForInstalledModel(named: modelName, toBecome: .cold)
         }
         isUnloading = false
     }

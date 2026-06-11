@@ -25,7 +25,7 @@ enum InstalledModelListPolicy {
 }
 
 enum ModelLoadStatus: String, Equatable {
-    case idle = "Idle"
+    case cold = "Cold"
     case warm = "Warm"
     case busy = "Busy"
 }
@@ -70,7 +70,7 @@ enum ModelStatusPolicy {
         if isActive(model: model, runningModels: runningModels, activeModelNames: activeModelNames, now: now) {
             return .busy
         }
-        return runningModel(for: model, runningModels: runningModels, now: now) == nil ? .idle : .warm
+        return runningModel(for: model, runningModels: runningModels, now: now) == nil ? .cold : .warm
     }
 
     static func timeRemaining(for runningModel: RunningModel?, now: Date = Date()) -> String? {
@@ -90,7 +90,7 @@ enum ModelStatusPolicy {
                 modelName: model.name,
                 status: isActive(model: model, runningModels: runningModels, activeModelNames: activeModelNames, now: now)
                     ? .busy
-                    : (runningModel == nil ? .idle : .warm),
+                    : (runningModel == nil ? .cold : .warm),
                 timeRemaining: timeRemaining(for: runningModel, now: now)
             )
         }
@@ -114,7 +114,7 @@ enum ModelStatusPolicy {
 
 enum InstalledModelActionPolicy {
     static func canWarmSelected(status: ModelLoadStatus?, isWarming: Bool, isUnloading: Bool = false) -> Bool {
-        status == .idle && !isWarming && !isUnloading
+        status == .cold && !isWarming && !isUnloading
     }
 
     static func canUnloadSelected(isWarm: Bool, isWarming: Bool, isUnloading: Bool) -> Bool {
