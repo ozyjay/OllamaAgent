@@ -130,6 +130,17 @@ final class OllamaAPIClientRequestTests: XCTestCase {
         XCTAssertEqual(options["temperature"] as? Double, 0.4)
     }
 
+    func testGenerateBenchmarkUsesLongerRequestTimeoutThanWarmAndUnload() async throws {
+        await session.setStub(.init(data: Fixtures.data("generate")), for: "/api/generate")
+
+        _ = try await client.warmModel(name: "llama3.2:latest", keepAlive: "5m", numCtx: nil, options: [:])
+        _ = try await client.runBenchmark(model: "llama3.2:latest", prompt: "hello", numCtx: nil, keepAlive: "5m", options: [:])
+        _ = try await client.unloadModelViaAPI(name: "llama3.2:latest")
+
+        let requests = await session.capturedRequests()
+        XCTAssertEqual(requests.map(\.timeoutInterval), [30, 300, 30])
+    }
+
     func testBadStatusAndEmptyResponseSurfaceTypedErrors() async throws {
         await session.setStub(.init(statusCode: 503, data: Data()), for: "/api/version")
         do {

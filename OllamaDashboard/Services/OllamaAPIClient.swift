@@ -39,6 +39,12 @@ protocol HTTPSessionProviding {
 extension URLSession: HTTPSessionProviding {}
 
 final class OllamaAPIClient: OllamaAPIClientProviding {
+    private enum RequestTimeout {
+        static let get: TimeInterval = 8
+        static let standardPost: TimeInterval = 30
+        static let generation: TimeInterval = 300
+    }
+
     private let baseURL: URL
     private let session: any HTTPSessionProviding
     private let decoder: JSONDecoder
@@ -122,7 +128,7 @@ final class OllamaAPIClient: OllamaAPIClientProviding {
         if !requestOptions.isEmpty {
             body["options"] = .object(requestOptions)
         }
-        let chunk: GenerateResponseChunk = try await post("api/generate", body: body)
+        let chunk: GenerateResponseChunk = try await post("api/generate", body: body, timeout: RequestTimeout.generation)
         return BenchmarkResult(
             model: model,
             prompt: prompt,
@@ -137,13 +143,17 @@ final class OllamaAPIClient: OllamaAPIClientProviding {
     }
 
     private func get<T: Decodable>(_ path: String) async throws -> T {
-        var request = URLRequest(url: try url(for: path), timeoutInterval: 8)
+        var request = URLRequest(url: try url(for: path), timeoutInterval: RequestTimeout.get)
         request.httpMethod = "GET"
         return try await send(request)
     }
 
-    private func post<T: Decodable, Body: Encodable>(_ path: String, body: Body) async throws -> T {
-        var request = URLRequest(url: try url(for: path), timeoutInterval: 30)
+    private func post<T: Decodable, Body: Encodable>(
+        _ path: String,
+        body: Body,
+        timeout: TimeInterval = RequestTimeout.standardPost
+    ) async throws -> T {
+        var request = URLRequest(url: try url(for: path), timeoutInterval: timeout)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONEncoder().encode(body)

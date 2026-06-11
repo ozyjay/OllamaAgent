@@ -109,14 +109,25 @@ struct ModelStatusRow: Equatable {
 }
 
 enum ModelStatusPolicy {
-    static func runningModel(for model: InstalledModel, runningModels: [RunningModel]) -> RunningModel? {
-        runningModels.first { namesMatch($0.name, model.name) || namesMatch($0.model, model.name) }
+    static func runningModel(
+        for model: InstalledModel,
+        runningModels: [RunningModel],
+        now: Date = Date()
+    ) -> RunningModel? {
+        runningModels.first {
+            isCurrent($0, now: now) && (namesMatch($0.name, model.name) || namesMatch($0.model, model.name))
+        }
     }
 
-    static func isActive(model: InstalledModel, runningModels: [RunningModel], activeModelNames: Set<String>) -> Bool {
+    static func isActive(
+        model: InstalledModel,
+        runningModels: [RunningModel],
+        activeModelNames: Set<String>,
+        now: Date = Date()
+    ) -> Bool {
         activeModelNames.contains { activeName in
             namesMatch(activeName, model.name)
-                || runningModel(for: model, runningModels: runningModels).map {
+                || runningModel(for: model, runningModels: runningModels, now: now).map {
                     namesMatch(activeName, $0.name) || namesMatch(activeName, $0.model)
                 } == true
         }
@@ -125,17 +136,18 @@ enum ModelStatusPolicy {
     static func status(
         for model: InstalledModel,
         runningModels: [RunningModel],
-        activeModelNames: Set<String> = []
+        activeModelNames: Set<String> = [],
+        now: Date = Date()
     ) -> ModelLoadStatus {
-        if isActive(model: model, runningModels: runningModels, activeModelNames: activeModelNames) {
+        if isActive(model: model, runningModels: runningModels, activeModelNames: activeModelNames, now: now) {
             return .busy
         }
-        return runningModel(for: model, runningModels: runningModels) == nil ? .idle : .warm
+        return runningModel(for: model, runningModels: runningModels, now: now) == nil ? .idle : .warm
     }
 
     static func timeRemaining(for runningModel: RunningModel?, now: Date = Date()) -> String? {
-        guard let expiresAt = runningModel?.expiresAt else { return nil }
-        return WarmTimeRemainingFormatter.string(from: max(0, expiresAt.timeIntervalSince(now)))
+        guard let expiresAt = runningModel?.expiresAt, expiresAt > now else { return nil }
+        return WarmTimeRemainingFormatter.string(from: expiresAt.timeIntervalSince(now))
     }
 
     static func statusRows(
@@ -145,10 +157,10 @@ enum ModelStatusPolicy {
         now: Date = Date()
     ) -> [ModelStatusRow] {
         installedModels.map { model in
-            let runningModel = runningModel(for: model, runningModels: runningModels)
+            let runningModel = runningModel(for: model, runningModels: runningModels, now: now)
             return ModelStatusRow(
                 modelName: model.name,
-                status: isActive(model: model, runningModels: runningModels, activeModelNames: activeModelNames)
+                status: isActive(model: model, runningModels: runningModels, activeModelNames: activeModelNames, now: now)
                     ? .busy
                     : (runningModel == nil ? .idle : .warm),
                 timeRemaining: timeRemaining(for: runningModel, now: now)
@@ -164,6 +176,17 @@ enum ModelStatusPolicy {
     private static func normalizedName(_ name: String) -> String {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.hasSuffix(":latest") ? String(trimmed.dropLast(":latest".count)) : trimmed
+    }
+
+    private static func isCurrent(_ runningModel: RunningModel, now: Date) -> Bool {
+        guard let expiresAt = runningModel.expiresAt else { return true }
+        return expiresAt > now
+    }
+}
+
+enum InstalledModelActionPolicy {
+    static func canWarmSelected(status: ModelLoadStatus?, isWarming: Bool) -> Bool {
+        status == .idle && !isWarming
     }
 }
 
@@ -233,7 +256,8 @@ struct InstalledModelsView: View {
         return ModelStatusPolicy.status(
             for: selectedModel,
             runningModels: monitor.runningModels,
-            activeModelNames: proxy.activeModelNames
+            activeModelNames: proxy.activeModelNames,
+            now: now
         )
     }
 
@@ -291,7 +315,7 @@ struct InstalledModelsView: View {
                     Button(isWarming ? "Warming..." : "Warm Up Selected") {
                         Task { await warmSelected() }
                     }
-                    .disabled(selectedModel == nil || isWarming)
+                    .disabled(!InstalledModelActionPolicy.canWarmSelected(status: selectedModelStatus, isWarming: isWarming))
                     Button("Unload Selected") {
                         if settings.confirmUnload {
                             pendingUnload.begin(forModelName: selectedModel?.name)
@@ -338,10 +362,15 @@ struct InstalledModelsView: View {
                                 status: ModelStatusPolicy.status(
                                     for: model,
                                     runningModels: monitor.runningModels,
-                                    activeModelNames: proxy.activeModelNames
+                                    activeModelNames: proxy.activeModelNames,
+                                    now: now
                                 ),
                                 timeRemaining: ModelStatusPolicy.timeRemaining(
-                                    for: ModelStatusPolicy.runningModel(for: model, runningModels: monitor.runningModels),
+                                    for: ModelStatusPolicy.runningModel(
+                                        for: model,
+                                        runningModels: monitor.runningModels,
+                                        now: now
+                                    ),
                                     now: now
                                 ),
                                 profileName: profileUsage.profileName(for: model.name),

@@ -90,6 +90,86 @@ private struct ProxyStatusView: View {
                     }
                 }
             }
+            if !proxy.diagnosticRecords.isEmpty {
+                ProxyDiagnosticsView()
+            }
         }
+    }
+}
+
+private struct ProxyDiagnosticsView: View {
+    @EnvironmentObject private var proxy: OllamaProxyServer
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 8) {
+                Text("Recent Proxy Diagnostics")
+                    .font(.headline)
+                Spacer()
+                Button("Copy Diagnostics") {
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(proxy.diagnosticsSummary(), forType: .string)
+                }
+                Button("Clear") {
+                    proxy.clearDiagnostics()
+                }
+            }
+            VStack(alignment: .leading, spacing: 4) {
+                ForEach(proxy.diagnosticRecords.suffix(8).reversed()) { record in
+                    ProxyDiagnosticRow(record: record)
+                }
+            }
+        }
+        .padding(.top, 4)
+    }
+}
+
+private struct ProxyDiagnosticRow: View {
+    let record: OllamaProxyRequestRecord
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: 6) {
+                Text(record.model)
+                    .font(.caption.weight(.semibold))
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                Text(record.path)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                Spacer()
+                Text(record.statusText)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(record.isFailure ? .red : .secondary)
+            }
+            HStack(spacing: 8) {
+                Text(String(format: "%.1fs", record.duration))
+                Text(ByteFormatter.string(from: Int64(record.bodyByteCount)))
+                if let promptCharacterCount = record.promptCharacterCount {
+                    Text("\(promptCharacterCount) chars")
+                }
+                if let messageCount = record.messageCount {
+                    Text("\(messageCount) messages")
+                }
+                if let numCtx = record.numCtx {
+                    Text("ctx \(numCtx)")
+                }
+                if let numPredict = record.numPredict {
+                    Text("predict \(numPredict)")
+                }
+                if record.isLikelyProviderTimeout {
+                    Text("Likely provider timeout")
+                        .foregroundStyle(.orange)
+                }
+                Spacer()
+                Text(DurationFormatter.date(record.startedAt))
+            }
+            .font(.caption2)
+            .foregroundStyle(.secondary)
+            .lineLimit(1)
+        }
+        .textSelection(.enabled)
     }
 }
