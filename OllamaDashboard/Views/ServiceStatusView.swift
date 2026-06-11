@@ -7,22 +7,6 @@ struct ServiceStatusView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Logs")
-                .font(.title3.bold())
-            if let error = monitor.errorMessage {
-                Text(error)
-                    .foregroundStyle(.red)
-                    .textSelection(.enabled)
-            }
-            HStack(spacing: 8) {
-                Button("Open Ollama Docs") {
-                    NSWorkspace.shared.open(URL(string: "https://github.com/ollama/ollama/blob/main/docs/api.md")!)
-                }
-                Button("Open Local URL") {
-                    NSWorkspace.shared.open(settings.baseURL)
-                }
-            }
-            Divider()
             SystemResourcesView()
             Divider()
             ProxyStatusView()
