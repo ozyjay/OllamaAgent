@@ -1,8 +1,8 @@
-# OllamaDashboard
+# OllamaAgent
 
-OllamaDashboard is a local macOS SwiftUI utility app with a lightweight menu bar companion for an existing Ollama service. It attaches to the public Ollama HTTP API at `http://localhost:11434` by default and keeps optional CLI-backed controls explicit and opt-in.
+OllamaAgent is a local macOS SwiftUI utility app with a lightweight menu bar companion for an existing Ollama service. It attaches to the public Ollama HTTP API at `http://localhost:11434` by default and keeps optional CLI-backed controls explicit and opt-in.
 
-The app is designed as a lightweight local systems dashboard for:
+The app is designed as a lightweight local agent control plane for:
 
 - Ollama service reachability and version
 - installed models from `/api/tags`
@@ -18,7 +18,7 @@ The main window opens on launch and is the primary workspace. Closing the window
 
 ## Run
 
-Open `OllamaDashboard.xcodeproj` in Xcode 26 or newer and run the `OllamaDashboard` scheme.
+Open `OllamaAgent.xcodeproj` in Xcode 26 or newer and run the `OllamaAgent` scheme.
 
 Requirements:
 
@@ -76,7 +76,7 @@ CLI-backed controls are opt-in: `ollama stop` and raw `ollama ps`. Model names a
 
 The Logs view reads `~/.ollama/logs/server.log` directly and only loads the final bounded slice of the file before showing the last 200 lines.
 
-Proxy mode is optional. When enabled, point compatible clients at the dashboard proxy URL, for example `http://localhost:11435`, instead of the Ollama base URL. The proxy forwards requests to Ollama and marks proxied models as Busy while responses are in flight.
+Proxy mode is optional. When enabled, point compatible clients at the agent proxy URL, for example `http://localhost:11435`, instead of the Ollama base URL. The proxy forwards requests to Ollama and marks proxied models as Busy while responses are in flight.
 
 ## Manual Ollama Configuration
 

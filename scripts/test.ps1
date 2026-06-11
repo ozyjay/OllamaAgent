@@ -6,8 +6,8 @@ $RepoRoot = Split-Path -Parent $PSScriptRoot
 Push-Location $RepoRoot
 try {
     xcodebuild `
-        -project OllamaDashboard.xcodeproj `
-        -scheme OllamaDashboard `
+        -project OllamaAgent.xcodeproj `
+        -scheme OllamaAgent `
         -destination 'platform=macOS' `
         -derivedDataPath ./.DerivedData `
         test `
