@@ -77,6 +77,9 @@ struct SystemResourcesView: View {
         if let peakBytes = status.peakBytes {
             details.append("peak \(ByteFormatter.string(from: peakBytes))")
         }
+        if let totalBytes = status.totalBytes {
+            details.append("total \(ByteFormatter.string(from: totalBytes))")
+        }
         if let freeBytes = status.freeBytes {
             details.append("free \(ByteFormatter.string(from: freeBytes))")
         }

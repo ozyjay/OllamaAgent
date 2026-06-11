@@ -12,14 +12,18 @@ struct CPUUsage: Equatable {
 }
 
 struct GPUMemoryStatus: Equatable {
+    let totalBytes: Int64?
     let availableBytes: Int64?
     let freeBytes: Int64?
     let peakBytes: Int64?
     let sampledAt: Date
 
     var usageFraction: Double? {
-        if let peakBytes, let availableBytes, availableBytes > 0 {
-            return clampedFraction(Double(peakBytes) / Double(availableBytes))
+        if let peakBytes {
+            let capacityBytes = totalBytes ?? availableBytes
+            if let capacityBytes, capacityBytes > 0 {
+                return clampedFraction(Double(peakBytes) / Double(capacityBytes))
+            }
         }
         if let availableBytes, let freeBytes, availableBytes > 0 {
             let usedBytes = max(0, availableBytes - freeBytes)
@@ -64,13 +68,18 @@ enum SystemResourceParser {
     }
 
     static func gpuStatus(from text: String, sampledAt: Date = Date()) -> GPUMemoryStatus? {
+        var totalBytes: Int64?
         var availableBytes: Int64?
         var freeBytes: Int64?
         var peakBytes: Int64?
 
         for line in text.split(separator: "\n", omittingEmptySubsequences: false).map(String.init) {
             let lowercased = line.lowercased()
+            if lowercased.contains("inference compute") || lowercased.contains("updated vram") {
+                totalBytes = keyValue("total", in: line).flatMap(byteCount) ?? totalBytes
+            }
             if lowercased.contains("gpu memory") {
+                totalBytes = keyValue("total", in: line).flatMap(byteCount) ?? totalBytes
                 availableBytes = keyValue("available", in: line).flatMap(byteCount)
                 freeBytes = keyValue("free", in: line).flatMap(byteCount)
             }
@@ -81,8 +90,9 @@ enum SystemResourceParser {
             }
         }
 
-        guard availableBytes != nil || freeBytes != nil || peakBytes != nil else { return nil }
+        guard totalBytes != nil || availableBytes != nil || freeBytes != nil || peakBytes != nil else { return nil }
         return GPUMemoryStatus(
+            totalBytes: totalBytes,
             availableBytes: availableBytes,
             freeBytes: freeBytes,
             peakBytes: peakBytes,
@@ -141,6 +151,9 @@ enum SystemResourceParser {
 final class SystemResourceMonitor: ObservableObject {
     @Published private(set) var snapshot = SystemResourceSnapshot.empty
 
+    private static let resourceLogMaxLines = 2_000
+    private static let resourceLogMaxBytes: UInt64 = 2 * 1_024 * 1_024
+
     private var refreshTask: Task<Void, Never>?
 
     func start() {
@@ -194,8 +207,8 @@ final class SystemResourceMonitor: ObservableObject {
     nonisolated private static func ollamaLogText() async -> String? {
         await Task.detached(priority: .utility) {
             try? await OllamaCLIClient().readLogs(
-                maxLines: OllamaLogTail.defaultMaxLines,
-                maxBytes: OllamaLogTail.defaultMaxBytes
+                maxLines: resourceLogMaxLines,
+                maxBytes: resourceLogMaxBytes
             )
         }.value
     }

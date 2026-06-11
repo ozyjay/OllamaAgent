@@ -126,10 +126,24 @@ final class FormattingAndViewPolicyTests: XCTestCase {
 
         let status = try XCTUnwrap(SystemResourceParser.gpuStatus(from: text))
 
+        XCTAssertNil(status.totalBytes)
         XCTAssertEqual(status.availableBytes, 55_082_955_571)
         XCTAssertEqual(status.freeBytes, 55_619_826_483)
         XCTAssertEqual(status.peakBytes, 26_950_919_782)
         XCTAssertEqual(try XCTUnwrap(status.usageFraction), 0.4893, accuracy: 0.001)
+    }
+
+    func testSystemResourceParserUsesOllamaVRAMTotalForPeakMemory() throws {
+        let text = """
+        time=2026-06-11T17:09:25.686+10:00 level=INFO source=sched.go:1333 msg="updated VRAM based on existing loaded models" gpu=0 library=Metal total="51.8 GiB" available="20.9 GiB"
+        time=2026-06-11T17:33:28.819+10:00 level=INFO source=pipeline.go:71 msg="peak memory" size="30.83 GiB"
+        """
+
+        let status = try XCTUnwrap(SystemResourceParser.gpuStatus(from: text))
+
+        XCTAssertEqual(status.totalBytes, 55_619_826_483)
+        XCTAssertEqual(status.peakBytes, 33_103_460_434)
+        XCTAssertEqual(try XCTUnwrap(status.usageFraction), 0.5952, accuracy: 0.001)
     }
 
     func testSystemResourceParserFallsBackToGPUMemoryPressureWhenPeakIsMissing() throws {
