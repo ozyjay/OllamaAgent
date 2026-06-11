@@ -13,10 +13,17 @@
 		010000000000000000000003 /* OllamaModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000003 /* OllamaModels.swift */; };
 		010000000000000000000004 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000004 /* AppSettings.swift */; };
 		010000000000000000000005 /* RuntimeProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000005 /* RuntimeProfile.swift */; };
+		010000000000000000000021 /* ModelWarmRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000021 /* ModelWarmRequest.swift */; };
+		010000000000000000000022 /* InstalledModelPolicies.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000022 /* InstalledModelPolicies.swift */; };
+		010000000000000000000023 /* InstalledModelPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000023 /* InstalledModelPresentation.swift */; };
 		010000000000000000000006 /* OllamaAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000006 /* OllamaAPIClient.swift */; };
 		010000000000000000000007 /* OllamaCLIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000007 /* OllamaCLIClient.swift */; };
 		010000000000000000000008 /* OllamaServiceMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000008 /* OllamaServiceMonitor.swift */; };
 		01000000000000000000001C /* SystemResourceMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02000000000000000000001C /* SystemResourceMonitor.swift */; };
+		01000000000000000000001D /* OllamaProxyTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02000000000000000000001D /* OllamaProxyTypes.swift */; };
+		01000000000000000000001E /* PromptGuardrails.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02000000000000000000001E /* PromptGuardrails.swift */; };
+		01000000000000000000001F /* OllamaProxyServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02000000000000000000001F /* OllamaProxyServer.swift */; };
+		010000000000000000000020 /* OllamaProxyHTTP.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000020 /* OllamaProxyHTTP.swift */; };
 		010000000000000000000009 /* BenchmarkService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000009 /* BenchmarkService.swift */; };
 		01000000000000000000000A /* ProfileManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02000000000000000000000A /* ProfileManager.swift */; };
 		01000000000000000000000B /* ByteFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02000000000000000000000B /* ByteFormatter.swift */; };
@@ -26,7 +33,11 @@
 		01000000000000000000000F /* DashboardWindowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02000000000000000000000F /* DashboardWindowView.swift */; };
 		010000000000000000000010 /* CommonViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000010 /* CommonViews.swift */; };
 		010000000000000000000011 /* ServiceStatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000011 /* ServiceStatusView.swift */; };
+		010000000000000000000026 /* SystemResourcesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000026 /* SystemResourcesView.swift */; };
+		010000000000000000000027 /* ProxyStatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000027 /* ProxyStatusView.swift */; };
 		010000000000000000000012 /* InstalledModelsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000012 /* InstalledModelsView.swift */; };
+		010000000000000000000024 /* InstalledModelRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000024 /* InstalledModelRow.swift */; };
+		010000000000000000000025 /* InstalledModelDetailSummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000025 /* InstalledModelDetailSummaryView.swift */; };
 		010000000000000000000013 /* RunningModelsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000013 /* RunningModelsView.swift */; };
 		010000000000000000000014 /* ContextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000014 /* ContextView.swift */; };
 		010000000000000000000015 /* BenchmarkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000015 /* BenchmarkView.swift */; };
@@ -46,6 +57,9 @@
 		010000000000000000000109 /* OllamaServiceMonitorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020000000000000000000109 /* OllamaServiceMonitorTests.swift */; };
 		01000000000000000000010A /* ProfileAndSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02000000000000000000010A /* ProfileAndSettingsTests.swift */; };
 		01000000000000000000010B /* FormattingAndViewPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02000000000000000000010B /* FormattingAndViewPolicyTests.swift */; };
+		01000000000000000000010C /* InstalledModelPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02000000000000000000010C /* InstalledModelPolicyTests.swift */; };
+		01000000000000000000010D /* PromptGuardrailTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02000000000000000000010D /* PromptGuardrailTests.swift */; };
+		01000000000000000000010E /* OllamaProxyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02000000000000000000010E /* OllamaProxyTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -65,10 +79,17 @@
 		020000000000000000000003 /* OllamaModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/OllamaModels.swift; sourceTree = "<group>"; };
 		020000000000000000000004 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/AppSettings.swift; sourceTree = "<group>"; };
 		020000000000000000000005 /* RuntimeProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/RuntimeProfile.swift; sourceTree = "<group>"; };
+		020000000000000000000021 /* ModelWarmRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/ModelWarmRequest.swift; sourceTree = "<group>"; };
+		020000000000000000000022 /* InstalledModelPolicies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/InstalledModelPolicies.swift; sourceTree = "<group>"; };
+		020000000000000000000023 /* InstalledModelPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/InstalledModelPresentation.swift; sourceTree = "<group>"; };
 		020000000000000000000006 /* OllamaAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/OllamaAPIClient.swift; sourceTree = "<group>"; };
 		020000000000000000000007 /* OllamaCLIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/OllamaCLIClient.swift; sourceTree = "<group>"; };
 		020000000000000000000008 /* OllamaServiceMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/OllamaServiceMonitor.swift; sourceTree = "<group>"; };
 		02000000000000000000001C /* SystemResourceMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/SystemResourceMonitor.swift; sourceTree = "<group>"; };
+		02000000000000000000001D /* OllamaProxyTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/Proxy/OllamaProxyTypes.swift; sourceTree = "<group>"; };
+		02000000000000000000001E /* PromptGuardrails.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/Proxy/PromptGuardrails.swift; sourceTree = "<group>"; };
+		02000000000000000000001F /* OllamaProxyServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/Proxy/OllamaProxyServer.swift; sourceTree = "<group>"; };
+		020000000000000000000020 /* OllamaProxyHTTP.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/Proxy/OllamaProxyHTTP.swift; sourceTree = "<group>"; };
 		020000000000000000000009 /* BenchmarkService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/BenchmarkService.swift; sourceTree = "<group>"; };
 		02000000000000000000000A /* ProfileManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/ProfileManager.swift; sourceTree = "<group>"; };
 		02000000000000000000000B /* ByteFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utilities/ByteFormatter.swift; sourceTree = "<group>"; };
@@ -78,7 +99,11 @@
 		02000000000000000000000F /* DashboardWindowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/DashboardWindowView.swift; sourceTree = "<group>"; };
 		020000000000000000000010 /* CommonViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/CommonViews.swift; sourceTree = "<group>"; };
 		020000000000000000000011 /* ServiceStatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/ServiceStatusView.swift; sourceTree = "<group>"; };
-		020000000000000000000012 /* InstalledModelsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/InstalledModelsView.swift; sourceTree = "<group>"; };
+		020000000000000000000026 /* SystemResourcesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/Status/SystemResourcesView.swift; sourceTree = "<group>"; };
+		020000000000000000000027 /* ProxyStatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/Status/ProxyStatusView.swift; sourceTree = "<group>"; };
+		020000000000000000000012 /* InstalledModelsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/Models/InstalledModelsView.swift; sourceTree = "<group>"; };
+		020000000000000000000024 /* InstalledModelRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/Models/InstalledModelRow.swift; sourceTree = "<group>"; };
+		020000000000000000000025 /* InstalledModelDetailSummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/Models/InstalledModelDetailSummaryView.swift; sourceTree = "<group>"; };
 		020000000000000000000013 /* RunningModelsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/RunningModelsView.swift; sourceTree = "<group>"; };
 		020000000000000000000014 /* ContextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/ContextView.swift; sourceTree = "<group>"; };
 		020000000000000000000015 /* BenchmarkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/BenchmarkView.swift; sourceTree = "<group>"; };
@@ -98,6 +123,9 @@
 		020000000000000000000109 /* OllamaServiceMonitorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OllamaServiceMonitorTests.swift; sourceTree = "<group>"; };
 		02000000000000000000010A /* ProfileAndSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileAndSettingsTests.swift; sourceTree = "<group>"; };
 		02000000000000000000010B /* FormattingAndViewPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormattingAndViewPolicyTests.swift; sourceTree = "<group>"; };
+		02000000000000000000010C /* InstalledModelPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstalledModelPolicyTests.swift; sourceTree = "<group>"; };
+		02000000000000000000010D /* PromptGuardrailTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromptGuardrailTests.swift; sourceTree = "<group>"; };
+		02000000000000000000010E /* OllamaProxyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OllamaProxyTests.swift; sourceTree = "<group>"; };
 		040000000000000000000001 /* OllamaDashboard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OllamaDashboard.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		040000000000000000000002 /* OllamaDashboardTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = OllamaDashboardTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -123,13 +151,20 @@
 				020000000000000000000001 /* OllamaDashboardApp.swift */,
 				020000000000000000000002 /* AppState.swift */,
 				02000000000000000000001A /* DashboardRuntime.swift */,
-				020000000000000000000003 /* OllamaModels.swift */,
-				020000000000000000000004 /* AppSettings.swift */,
-				020000000000000000000005 /* RuntimeProfile.swift */,
-				020000000000000000000006 /* OllamaAPIClient.swift */,
+					020000000000000000000003 /* OllamaModels.swift */,
+					020000000000000000000004 /* AppSettings.swift */,
+					020000000000000000000005 /* RuntimeProfile.swift */,
+					020000000000000000000021 /* ModelWarmRequest.swift */,
+					020000000000000000000022 /* InstalledModelPolicies.swift */,
+					020000000000000000000023 /* InstalledModelPresentation.swift */,
+					020000000000000000000006 /* OllamaAPIClient.swift */,
 				020000000000000000000007 /* OllamaCLIClient.swift */,
 				020000000000000000000008 /* OllamaServiceMonitor.swift */,
 				02000000000000000000001C /* SystemResourceMonitor.swift */,
+				02000000000000000000001D /* OllamaProxyTypes.swift */,
+				02000000000000000000001E /* PromptGuardrails.swift */,
+				02000000000000000000001F /* OllamaProxyServer.swift */,
+				020000000000000000000020 /* OllamaProxyHTTP.swift */,
 				020000000000000000000009 /* BenchmarkService.swift */,
 				02000000000000000000000A /* ProfileManager.swift */,
 				02000000000000000000000B /* ByteFormatter.swift */,
@@ -137,10 +172,14 @@
 				02000000000000000000000D /* ModelNameValidator.swift */,
 				02000000000000000000000E /* Logger.swift */,
 				02000000000000000000000F /* DashboardWindowView.swift */,
-				020000000000000000000010 /* CommonViews.swift */,
-				020000000000000000000011 /* ServiceStatusView.swift */,
-				020000000000000000000012 /* InstalledModelsView.swift */,
-				020000000000000000000013 /* RunningModelsView.swift */,
+					020000000000000000000010 /* CommonViews.swift */,
+					020000000000000000000011 /* ServiceStatusView.swift */,
+					020000000000000000000026 /* SystemResourcesView.swift */,
+					020000000000000000000027 /* ProxyStatusView.swift */,
+					020000000000000000000012 /* InstalledModelsView.swift */,
+					020000000000000000000024 /* InstalledModelRow.swift */,
+					020000000000000000000025 /* InstalledModelDetailSummaryView.swift */,
+					020000000000000000000013 /* RunningModelsView.swift */,
 				020000000000000000000014 /* ContextView.swift */,
 				020000000000000000000015 /* BenchmarkView.swift */,
 				020000000000000000000016 /* ProfilesView.swift */,
@@ -158,10 +197,13 @@
 				020000000000000000000101 /* ModelParsingTests.swift */,
 				020000000000000000000102 /* OllamaAPIClientTests.swift */,
 				020000000000000000000108 /* OllamaAPIClientRequestTests.swift */,
-				020000000000000000000109 /* OllamaServiceMonitorTests.swift */,
-				02000000000000000000010A /* ProfileAndSettingsTests.swift */,
-				02000000000000000000010B /* FormattingAndViewPolicyTests.swift */,
-				020000000000000000000107 /* TestDoubles.swift */,
+					020000000000000000000109 /* OllamaServiceMonitorTests.swift */,
+					02000000000000000000010A /* ProfileAndSettingsTests.swift */,
+					02000000000000000000010B /* FormattingAndViewPolicyTests.swift */,
+					02000000000000000000010C /* InstalledModelPolicyTests.swift */,
+					02000000000000000000010D /* PromptGuardrailTests.swift */,
+					02000000000000000000010E /* OllamaProxyTests.swift */,
+					020000000000000000000107 /* TestDoubles.swift */,
 				020000000000000000000103 /* Fixtures.swift */,
 				020000000000000000000104 /* tags.json */,
 				020000000000000000000105 /* ps.json */,
@@ -274,13 +316,20 @@
 				010000000000000000000001 /* OllamaDashboardApp.swift in Sources */,
 				010000000000000000000002 /* AppState.swift in Sources */,
 				01000000000000000000001A /* DashboardRuntime.swift in Sources */,
-				010000000000000000000003 /* OllamaModels.swift in Sources */,
-				010000000000000000000004 /* AppSettings.swift in Sources */,
-				010000000000000000000005 /* RuntimeProfile.swift in Sources */,
-				010000000000000000000006 /* OllamaAPIClient.swift in Sources */,
+					010000000000000000000003 /* OllamaModels.swift in Sources */,
+					010000000000000000000004 /* AppSettings.swift in Sources */,
+					010000000000000000000005 /* RuntimeProfile.swift in Sources */,
+					010000000000000000000021 /* ModelWarmRequest.swift in Sources */,
+					010000000000000000000022 /* InstalledModelPolicies.swift in Sources */,
+					010000000000000000000023 /* InstalledModelPresentation.swift in Sources */,
+					010000000000000000000006 /* OllamaAPIClient.swift in Sources */,
 				010000000000000000000007 /* OllamaCLIClient.swift in Sources */,
 				010000000000000000000008 /* OllamaServiceMonitor.swift in Sources */,
 				01000000000000000000001C /* SystemResourceMonitor.swift in Sources */,
+				01000000000000000000001D /* OllamaProxyTypes.swift in Sources */,
+				01000000000000000000001E /* PromptGuardrails.swift in Sources */,
+				01000000000000000000001F /* OllamaProxyServer.swift in Sources */,
+				010000000000000000000020 /* OllamaProxyHTTP.swift in Sources */,
 				010000000000000000000009 /* BenchmarkService.swift in Sources */,
 				01000000000000000000000A /* ProfileManager.swift in Sources */,
 				01000000000000000000000B /* ByteFormatter.swift in Sources */,
@@ -288,10 +337,14 @@
 				01000000000000000000000D /* ModelNameValidator.swift in Sources */,
 				01000000000000000000000E /* Logger.swift in Sources */,
 				01000000000000000000000F /* DashboardWindowView.swift in Sources */,
-				010000000000000000000010 /* CommonViews.swift in Sources */,
-				010000000000000000000011 /* ServiceStatusView.swift in Sources */,
-				010000000000000000000012 /* InstalledModelsView.swift in Sources */,
-				010000000000000000000013 /* RunningModelsView.swift in Sources */,
+					010000000000000000000010 /* CommonViews.swift in Sources */,
+					010000000000000000000011 /* ServiceStatusView.swift in Sources */,
+					010000000000000000000026 /* SystemResourcesView.swift in Sources */,
+					010000000000000000000027 /* ProxyStatusView.swift in Sources */,
+					010000000000000000000012 /* InstalledModelsView.swift in Sources */,
+					010000000000000000000024 /* InstalledModelRow.swift in Sources */,
+					010000000000000000000025 /* InstalledModelDetailSummaryView.swift in Sources */,
+					010000000000000000000013 /* RunningModelsView.swift in Sources */,
 				010000000000000000000014 /* ContextView.swift in Sources */,
 				010000000000000000000015 /* BenchmarkView.swift in Sources */,
 				010000000000000000000016 /* ProfilesView.swift in Sources */,
@@ -308,10 +361,13 @@
 				010000000000000000000101 /* ModelParsingTests.swift in Sources */,
 				010000000000000000000102 /* OllamaAPIClientTests.swift in Sources */,
 				010000000000000000000108 /* OllamaAPIClientRequestTests.swift in Sources */,
-				010000000000000000000109 /* OllamaServiceMonitorTests.swift in Sources */,
-				01000000000000000000010A /* ProfileAndSettingsTests.swift in Sources */,
-				01000000000000000000010B /* FormattingAndViewPolicyTests.swift in Sources */,
-				010000000000000000000107 /* TestDoubles.swift in Sources */,
+					010000000000000000000109 /* OllamaServiceMonitorTests.swift in Sources */,
+					01000000000000000000010A /* ProfileAndSettingsTests.swift in Sources */,
+					01000000000000000000010B /* FormattingAndViewPolicyTests.swift in Sources */,
+					01000000000000000000010C /* InstalledModelPolicyTests.swift in Sources */,
+					01000000000000000000010D /* PromptGuardrailTests.swift in Sources */,
+					01000000000000000000010E /* OllamaProxyTests.swift in Sources */,
+					010000000000000000000107 /* TestDoubles.swift in Sources */,
 				010000000000000000000103 /* Fixtures.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

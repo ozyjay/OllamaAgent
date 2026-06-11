@@ -46,30 +46,6 @@ final class ModelParsingTests: XCTestCase {
         XCTAssertTrue(result.wasAlreadyWarm)
     }
 
-    func testModelDetailSummaryUsesHumanReadableFields() {
-        let detail = ModelDetail(
-            license: "MIT",
-            modelfile: "FROM llama3.2",
-            parameters: "num_ctx 4096",
-            template: nil,
-            details: ModelDetails(
-                parentModel: nil,
-                format: "gguf",
-                family: "llama",
-                families: ["llama"],
-                parameterSize: "3.2B",
-                quantizationLevel: "Q4_K_M"
-            ),
-            modelInfo: ["general.architecture": .string("llama")]
-        )
-
-        let summary = ModelDetailSummary(detail: detail)
-
-        XCTAssertEqual(summary.fields.map(\.label), ["Format", "Family", "Parameters", "Quantization", "License"])
-        XCTAssertEqual(summary.fields.map(\.value), ["gguf", "llama", "3.2B", "Q4_K_M", "MIT"])
-        XCTAssertEqual(summary.sections.map(\.title), ["Modelfile", "Parameters"])
-    }
-
     func testModelContextMetadataExtractsContextLengthFromModelInfo() {
         let detail = ModelDetail(
             license: nil,
@@ -115,48 +91,5 @@ final class ModelParsingTests: XCTestCase {
         XCTAssertEqual(options.mirostatEta, 0.1)
         XCTAssertEqual(options.seed, 42)
         XCTAssertEqual(options.numPredict, 2048)
-    }
-
-    func testInstalledModelRowSummaryInfersParameterSizeFromModelNameWhenMetadataIsMissing() {
-        let model = InstalledModel(
-            name: "qwen3.6:27b-mlx",
-            modifiedAt: nil,
-            size: 19_760_000_000,
-            digest: "60b0437bbd02abcdef",
-            details: nil
-        )
-
-        let summary = InstalledModelRowSummary(model: model)
-
-        XCTAssertEqual(summary.trailingPrimary, "27B")
-        XCTAssertEqual(summary.trailingSecondary, "19.76 GB")
-        XCTAssertEqual(summary.metadata, "60b0437bbd02")
-    }
-
-    func testInstalledModelDetailToggleHidesOnlyVisibleSelectedDetails() {
-        XCTAssertTrue(
-            InstalledModelDetailToggle.shouldHideDetails(
-                selectedModelID: "gemma4:12b",
-                detailModelID: "gemma4:12b",
-                hasDetailSummary: true,
-                targetModelID: "gemma4:12b"
-            )
-        )
-        XCTAssertFalse(
-            InstalledModelDetailToggle.shouldHideDetails(
-                selectedModelID: "gemma4:12b",
-                detailModelID: "gemma4:12b",
-                hasDetailSummary: true,
-                targetModelID: "qwen3.6:27b-mlx"
-            )
-        )
-        XCTAssertFalse(
-            InstalledModelDetailToggle.shouldHideDetails(
-                selectedModelID: "gemma4:12b",
-                detailModelID: "gemma4:12b",
-                hasDetailSummary: false,
-                targetModelID: "gemma4:12b"
-            )
-        )
     }
 }
